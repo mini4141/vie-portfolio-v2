@@ -23,7 +23,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 3 — Guest + ops
 
 - [ ] **T8 Guest mode** — one-click guest session (1 h expiry), guest banner + timer, locked controls, sample drafts only (real drafts/email hidden), server-side 403 on every guest write, guest toggle in settings.
-- [ ] **T9a Linux-parity prep (small, can be done any time, ideally before T5)** — add `.gitattributes` (`* text=auto eol=lf`), `.dockerignore` (node_modules, dist, data, .env), confirm exact-case filenames/imports and `path.sep`-safe code, Node 24 pin noted in `engines`.
+- [x] **T9a Linux-parity prep (small, can be done any time, ideally before T5)** — add `.gitattributes` (`* text=auto eol=lf`), `.dockerignore` (node_modules, dist, data, .env), confirm exact-case filenames/imports and `path.sep`-safe code, Node 24 pin noted in `engines`. Done: `.gitattributes` (LF + binary assets), `.dockerignore`; all relative imports verified exact-case against tracked files; no hard-coded path separators in `src/`; `engines` already `>=24`.
 - [ ] **T9 DevOps** — Dockerfile (`node:24`, runs `npm ci` inside the image — never copy Windows `node_modules` because `sharp` is per-OS; non-root user owning `/data`), compose (app + Caddy + Litestream) with `/data` on a **named volume** (SQLite WAL is unreliable on Windows/Docker bind mounts), Caddyfile, backup/restore runbook, GitHub Actions CI on **ubuntu-latest** (build + `npm test` + image build), env template, `TRUST_PROXY=1` in compose.
 - [ ] **T10 Hardening** — security headers/CSP, a11y pass, Lighthouse-style size/speed budget, final regression run, README.
 

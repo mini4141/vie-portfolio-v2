@@ -46,12 +46,12 @@ We develop on Windows but deploy to Linux. Rules: exact-case filenames and impor
 
 ## Status at end of session 2
 
-Done and committed (all tests green, 46): **T1** foundation, **T2** public pages, **T3** auth, **T4a** projects API, **T4b** admin shell + dashboard.
+Done and committed (all tests green, 46): **T1** foundation, **T2** public pages, **T3** auth, **T4a** projects API, **T4b** admin shell + dashboard, **T9a** Linux-parity prep.
 Run `cd app && npm test` first to confirm the baseline.
 
 T4b notes: the shell is `layouts/AdminShell.astro` (`current` prop marks the nav item; named slot `banner` is where T8's guest banner goes, and the welcome `<dialog>` can live in the page). Client behaviour is plain JS in `public/admin.js` (sign-out, `data-locked` toasts, list search/filter/feature/duplicate/delete/reorder, which only run for `main[data-role=owner]`). Project list lives on the dashboard (`/admin#projects`) as in the mockup; search and status filter are client-side over the rendered rows. `/admin/projects/[id].astro` is a stub (404 for ids a guest may not see) for T5 to replace.
 
-## Next up: T9a (10 min) then T5 story editor
+## Next up: T5 story editor
 
 T5: port `../../chosen-5-plaintext/editor.html` to TipTap at `/admin/projects/:id` (replace the stub; keep the guest 404 rule via `getAdmin(id, role)`), autosave via `PATCH /api/projects/:id`, Edit/Split/Preview. The shell's sidebar `.ed-side` is `position:sticky;top:40px` for the banner; with no banner it is just a 40px gap-free offset, fine.
 
