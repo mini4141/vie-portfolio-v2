@@ -18,6 +18,14 @@ const nav = [
 ---
 <AdminBase title={title}>
   <div class="ed">
+    {guest && (
+      <div class="ed-banner" role="region" aria-label="Guest mode">
+        <Icon name="eye" />
+        <span><strong>Guest mode — view only.</strong> Explore freely; nothing you do will be saved.</span>
+        <span class="timer" data-guest-timer data-expires={auth.expiresAt ?? ''}>Ends in 60 min</span>
+        <a href="/admin/signin" data-leave-guest>Leave guest mode</a>
+      </div>
+    )}
     <slot name="banner" />
     <div class="ed-body">
       <aside class="ed-side" aria-label="Editor">
@@ -40,5 +48,13 @@ const nav = [
       </main>
     </div>
   </div>
+  {guest && (
+    <dialog class="welcome" data-guest-note aria-labelledby="w-title">
+      <div class="ico"><Icon name="eye" /></div>
+      <h2 id="w-title">You’re in view-only mode</h2>
+      <p>Explore freely; nothing you do will be saved. Open any screen, type into fields and try the preview. Your visit ends after one hour.</p>
+      <button class="btn btn-primary btn-block" data-close autofocus>Start exploring</button>
+    </dialog>
+  )}
   <script is:inline src="/admin.js" defer></script>
 </AdminBase>

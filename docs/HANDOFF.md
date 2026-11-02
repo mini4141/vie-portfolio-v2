@@ -63,14 +63,18 @@ T6 done and committed (67 tests). Server: `src/lib/media.ts` (sniff, `saveUpload
 
 T7 done and committed (76 tests). `src/lib/site.ts` validates profile/settings patches; screens are `pages/admin/profile.astro` + `settings.astro` with client code in `src/editor/{profile-page,settings-page,form-save}.ts` (`makeSaver` = shared autosave/Save/Ctrl+S). Accent contrast is not validated (any #rrggbb allowed).
 
-## Next up: T8 guest polish
+## Status at end of session 4
 
-Guest session is already 1 h and server-enforced read-only (middleware), settings toggle works, sample drafts only. Remaining: guest banner in `AdminShell`'s `banner` slot (mockup `.ed-banner`: view-only message, countdown timer from session expiry, Leave guest mode), welcome `<dialog>` on first guest visit, check every guest-facing screen for copy/locks, expiry UX (session ends mid-edit -> friendly redirect), then a guest regression sweep across all pages. Then T5b, T9, T10.
+T8 done (tests green incl. `tests/guest.test.ts`). `AdminShell` renders the guest banner (`data-guest-timer data-expires=<session expiry ms>`) and the welcome `<dialog data-guest-note>` for guests only. `public/admin.js` wraps `window.fetch`: any 401 from `/api/*` (not `/api/auth/*`) or the countdown hitting zero redirects to `/admin/signin?expired=1`, which shows "Your session has ended". "Leave guest mode" POSTs logout then goes to `/`. Welcome note is remembered in `sessionStorage` (`vie-guest-seen`).
+
+## Next up: T5b editor polish
+
+Caption/alt editing on picture blocks, replace picture, block gutter (drag/menu), table row/column controls, callout kind switcher. Then T9, T10.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T8 → T5b → T9 → T10.
+Suggested order: T5b → T9 → T10.
 
-T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
+T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 
 Known follow-ups: add `lastmod`/`ETag` caching for `/media`; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.

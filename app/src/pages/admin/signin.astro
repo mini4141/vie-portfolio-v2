@@ -40,6 +40,8 @@ const p = getProfile(), s = getSettings();
   const go = document.getElementById('go') as HTMLButtonElement;
   const show = (m: string) => { err.textContent = m; err.classList.add('show'); };
 
+  if (new URLSearchParams(location.search).has('expired')) show('Your session has ended. Sign in again to carry on.');
+
   async function post(url: string, body?: object) {
     const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
     return { ok: r.ok, data: await r.json().catch(() => ({})) as { message?: string } };

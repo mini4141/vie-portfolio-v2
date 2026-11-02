@@ -20,6 +20,49 @@
   var out = document.getElementById('out');
   if (out) out.addEventListener('click', async function () { await fetch('/api/auth/logout', { method: 'POST' }); location.href = '/'; });
 
+  /* session ended (guest hour up, or owner signed out elsewhere): go to sign-in with a friendly note */
+  var ended = false;
+  function sessionEnded() {
+    if (ended) return; ended = true;
+    try { sessionStorage.removeItem('vie-guest-seen'); } catch (e) {}
+    toast('Your session has ended. Taking you to sign in…');
+    setTimeout(function () { location.href = '/admin/signin?expired=1'; }, 1200);
+  }
+  var nativeFetch = window.fetch;
+  window.fetch = function (input, init) {
+    return nativeFetch.apply(this, arguments).then(function (r) {
+      var u = typeof input === 'string' ? input : (input && input.url) || '';
+      if (r.status === 401 && u.indexOf('/api/') > -1 && u.indexOf('/api/auth/') < 0) sessionEnded();
+      return r;
+    });
+  };
+
+  /* guest: welcome note once per visit, countdown in the banner */
+  var dlg = document.querySelector('dialog[data-guest-note]');
+  if (dlg && dlg.showModal) {
+    var seen = false;
+    try { seen = !!sessionStorage.getItem('vie-guest-seen'); sessionStorage.setItem('vie-guest-seen', '1'); } catch (e) {}
+    if (!seen) dlg.showModal();
+  }
+  var timer = document.querySelector('[data-guest-timer]');
+  if (timer) {
+    var end = Number(timer.getAttribute('data-expires')) || Date.now() + 3600000;
+    var tick = function () {
+      var left = end - Date.now();
+      if (left <= 0) { timer.textContent = 'Ended'; sessionEnded(); return; }
+      var m = Math.ceil(left / 60000);
+      timer.textContent = m <= 1 ? 'Ends in under a minute' : 'Ends in ' + m + ' min';
+    };
+    tick(); setInterval(tick, 15000);
+  }
+  document.querySelectorAll('[data-leave-guest]').forEach(function (a) {
+    a.addEventListener('click', async function (e) {
+      e.preventDefault();
+      try { await fetch('/api/auth/logout', { method: 'POST' }); } catch (x) {}
+      location.href = '/';
+    });
+  });
+
   document.querySelectorAll('[data-locked]').forEach(function (b) {
     b.setAttribute('aria-disabled', 'true');
     b.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); toast('Saving is turned off in guest mode.'); });
