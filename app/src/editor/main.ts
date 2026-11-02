@@ -4,6 +4,7 @@ import { storyExtensions, toStoryHtml } from './extensions.ts';
 import { buildPreview } from './preview.ts';
 import { INSERTS, filterInserts, imageHtml, galleryHtml, type InsertItem } from './blocks.ts';
 import { pickMedia } from './media-client.ts';
+import { blockCount, blockIndexAtY, moveBlock, duplicateBlock, deleteBlock, addParagraphAfter, TURN_INTO, isTextBlock, selectInside } from './gutter.ts';
 import { contextFor } from './context.ts';
 import { editFigure, readFigure, figuresOf } from './picture.ts';
 
@@ -322,6 +323,91 @@ editor.on('transaction', updateCtx);
 editor.on('blur', () => setTimeout(updateCtx, 0));
 addEventListener('scroll', updateCtx, true);
 addEventListener('resize', updateCtx);
+
+/* ---------- block gutter: add below, drag to move, block menu ---------- */
+const gutter = $('[data-gutter]')!, gHandle = $('[data-handle]', gutter)!, gAdd = $('[data-add]', gutter)!, docWrap = gutter.parentElement!;
+const dropLine = document.createElement('div');
+dropLine.className = 'drop-line'; dropLine.hidden = true; docWrap.appendChild(dropLine);
+const blockEl = (i: number) => editor.view.dom.children[i] as HTMLElement | undefined;
+let gIndex = -1, dragFrom = -1, dropTo = -1, menu: HTMLElement | null = null;
+function showGutter(i: number) {
+  const b = blockEl(i);
+  if (!b) return;
+  gIndex = i;
+  const lh = parseFloat(getComputedStyle(b).lineHeight), off = b.tagName === 'HR' ? -13 : Number.isNaN(lh) ? 0 : Math.max(0, (Math.min(lh, 40) - 26) / 2);
+  // a tall block can start under the sticky toolbar: keep the gutter in the visible part of it
+  const bar = $('.rt-toolbar')?.getBoundingClientRect().bottom ?? 0, br = b.getBoundingClientRect();
+  const y = Math.min(Math.max(br.top + off, bar + 6), Math.max(br.top + off, br.bottom - 32));
+  gutter.style.top = `${y - docWrap.getBoundingClientRect().top}px`;
+  gutter.classList.add('on');
+}
+function closeMenu() { menu?.remove(); menu = null; }
+docWrap.addEventListener('mousemove', (e) => { if (dragFrom < 0 && !menu && !(e.target as HTMLElement).closest('.gutter')) showGutter(blockIndexAtY(editor, e.clientY)); });
+docWrap.addEventListener('mouseleave', () => { if (!menu) gutter.classList.remove('on'); });
+editor.view.dom.addEventListener('keydown', () => gutter.classList.remove('on'));
+$$('button', gutter).forEach((b) => b.addEventListener('mousedown', (e) => { if (b !== gHandle) e.preventDefault(); }));
+gAdd.addEventListener('click', () => {
+  addParagraphAfter(editor, gIndex);
+  editor.commands.focus();
+  const r = gAdd.getBoundingClientRect();
+  openPop('insert', INSERTS, r.right + 6, r.top);
+});
+function openBlockMenu() {
+  closeMenu(); closePop();
+  const i = gIndex, n = blockCount(editor);
+  const items: { label: string; run: () => void; danger?: boolean; sep?: string }[] = [];
+  let turned = 0;
+  items.push({ sep: 'Block', label: 'Move up', run: () => void moveBlock(editor, i, i - 1) });
+  items.push({ label: 'Move down', run: () => void moveBlock(editor, i, i + 1) });
+  items.push({ label: 'Duplicate', run: () => void duplicateBlock(editor, i) });
+  items.push({ label: 'Delete', danger: true, run: () => void deleteBlock(editor, i) });
+  if (isTextBlock(editor, i)) TURN_INTO.forEach((t) => items.push({ sep: !turned++ ? 'Turn into' : undefined, label: t.label, run: () => { selectInside(editor, i); t.run(editor); } }));
+  menu = document.createElement('div');
+  menu.className = 'pop'; menu.setAttribute('role', 'menu');
+  for (const it of items) {
+    if (it.sep) { const h = document.createElement('div'); h.className = 'pop-h'; h.textContent = it.sep; menu.append(h); }
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'pop-i' + (it.danger ? ' danger' : ''); b.setAttribute('role', 'menuitem');
+    b.disabled = (it.label === 'Move up' && i === 0) || (it.label === 'Move down' && i === n - 1);
+    b.innerHTML = '<span><b></b></span>'; b.querySelector('b')!.textContent = it.label;
+    b.addEventListener('click', () => { closeMenu(); it.run(); editor.commands.focus(); });
+    menu.append(b);
+  }
+  document.body.append(menu);
+  const r = gHandle.getBoundingClientRect();
+  menu.style.left = `${r.right + 6}px`;
+  menu.style.top = `${Math.max(8, Math.min(r.top, innerHeight - menu.offsetHeight - 8))}px`;
+  menu.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+}
+gHandle.addEventListener('click', () => { if (menu) closeMenu(); else openBlockMenu(); });
+document.addEventListener('mousedown', (e) => { if (menu && !menu.contains(e.target as Node) && !gHandle.contains(e.target as Node)) closeMenu(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && menu) { closeMenu(); gHandle.focus(); } });
+gHandle.addEventListener('dragstart', (e) => {
+  dragFrom = gIndex; closeMenu(); closePop();
+  e.dataTransfer!.effectAllowed = 'move';
+  try { e.dataTransfer!.setData('text/plain', ''); const b = blockEl(dragFrom); if (b) e.dataTransfer!.setDragImage(b, 0, 0); } catch { /* drag image is optional */ }
+  setTimeout(() => blockEl(dragFrom)?.classList.add('is-drag'), 0);
+});
+function endDrag() { blockEl(dragFrom)?.classList.remove('is-drag'); dragFrom = -1; dropTo = -1; dropLine.hidden = true; }
+gHandle.addEventListener('dragend', endDrag);
+docWrap.addEventListener('dragover', (e) => {
+  if (dragFrom < 0) return;
+  e.preventDefault(); e.dataTransfer!.dropEffect = 'move';
+  const kids = Array.from(editor.view.dom.children) as HTMLElement[];
+  let slot = kids.length; // slot = the gap before block `slot`
+  for (let i = 0; i < kids.length; i++) { const r = kids[i]!.getBoundingClientRect(); if (e.clientY < r.top + r.height / 2) { slot = i; break; } }
+  dropTo = slot > dragFrom ? slot - 1 : slot; // index in the final order
+  const ref = kids[slot] ?? kids[kids.length - 1]!, wrapTop = docWrap.getBoundingClientRect().top;
+  dropLine.hidden = false;
+  dropLine.style.top = `${(slot < kids.length ? ref.getBoundingClientRect().top - 9 : ref.getBoundingClientRect().bottom + 7) - wrapTop}px`;
+}, true);
+docWrap.addEventListener('drop', (e) => {
+  if (dragFrom < 0) return;
+  e.preventDefault(); e.stopPropagation();
+  const from = dragFrom, to = dropTo;
+  endDrag();
+  moveBlock(editor, from, to);
+}, true);
 
 /* ---------- modes + preview ---------- */
 const form = $('[data-ed-form]')!, frame = $('[data-preview-frame]')!, iframe = $<HTMLIFrameElement>('iframe', frame)!;

@@ -71,11 +71,13 @@ T5b-1 done: `src/editor/picture.ts` (`readFigure`, `editFigure`, pure DOM helper
 
 T5b-2 done: `src/editor/context.ts` (`contextFor(editor)` returns the callout/table around the cursor plus its actions; unit-tested with a real TipTap `Editor` in happy-dom in `tests/context.test.ts`, which needs a `requestAnimationFrame` shim). `main.ts` renders them into `[data-ctx]` (reuses `.bubble` styling, `.ctxbar` in `app.css`), hidden while the text bubble shows or the block is scrolled out of view. Browser testing tip: synthetic selections don't focus the editor; use real clicks via element refs, since coordinates drift after `scrollIntoView`.
 
-## Next up: T5b-3 block gutter (drag handle + block menu), then T9, T10
+T5b-3 done: `src/editor/gutter.ts` (pure block ops by top-level index: `moveBlock`, `duplicateBlock`, `deleteBlock`, `addParagraphAfter`, `TURN_INTO`; tested with a real `Editor` in `tests/gutter.test.ts`). `main.ts` wires the hover gutter (`[data-gutter]` in the page), drag/drop with `.drop-line`, and the block menu (a `.pop` appended to body). Gotchas: the gutter is hidden below 860px (the browser pane is often narrower; use `resize_window` to 1400); the editor keeps an empty trailing paragraph after a final heading (dropped on save); a tall block's top can sit under the sticky `.rt-toolbar`, so the gutter is clamped into the visible part. T5b is complete.
+
+## Next up: T9 devops (Dockerfile, compose, Caddy, Litestream, CI), then T10 hardening
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T5b-3 → T9 → T10.
+Suggested order: T9 → T10.
 
 T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 

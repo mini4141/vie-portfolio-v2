@@ -84,7 +84,13 @@ const lock = guest ? { 'data-locked': '' } : {};
         <input class="doc-title" data-doc-title aria-label="Project title" placeholder="Project title" maxlength="120" value={project.title} autocomplete="off">
         <textarea class="headline doc-sum" data-doc-sum aria-label="Short summary, shown on project cards" placeholder="One sentence about what it does and for whom" maxlength="140" rows="2">{project.summary}</textarea>
         <div class="doc-meta"><span>summary · shown on project cards</span><span data-sum-count>0 / 140</span></div>
-        <div class="doc-wrap"><div data-rt></div></div>
+        <div class="doc-wrap">
+          <div data-rt></div>
+          <div class="gutter" data-gutter>
+            <button type="button" data-add aria-label="Add a block below" title="Add a block below"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" data-handle draggable="true" aria-label="Block options" aria-haspopup="menu" title="Drag to move · click for options"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg></button>
+          </div>
+        </div>
         <div class="doc-foot">
           <button type="button" class="tb" data-insert data-at-end aria-haspopup="menu">+ Add a block</button>
           <p class="doc-hint"><span><kbd>/</kbd> blocks</span><span><kbd>##</kbd> heading</span><span><kbd>-</kbd> list</span><span><kbd>&gt;</kbd> quote</span><span><kbd>```</kbd> code</span><span><kbd>---</kbd> divider</span><span>double-click a picture to edit it</span></p>
