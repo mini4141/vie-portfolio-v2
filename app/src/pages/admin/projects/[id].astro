@@ -1,17 +1,157 @@
 ---
 import AdminShell from '../../../layouts/AdminShell.astro';
+import Icon from '../../../components/Icon.astro';
 import { getAdmin } from '../../../lib/projects.ts';
+import { mediaUrl } from '../../../lib/queries.ts';
 
 const id = /^\d+$/.test(Astro.params.id ?? '') ? Number(Astro.params.id) : 0;
 const project = getAdmin(id, Astro.locals.auth.role);
 if (!project) return new Response('Not found', { status: 404 });
+const guest = Astro.locals.auth.role === 'guest';
+const published = project.status === 'published';
+// Data for the client editor; "<" is escaped so a story can never close the script tag.
+const data = JSON.stringify({
+  id: project.id, role: Astro.locals.auth.role, slug: project.slug, status: project.status,
+  title: project.title, summary: project.summary, story_html: project.story_html, tags: project.tags,
+  cover: project.cover_file ? mediaUrl(project.cover_file) : '', cover_alt: project.cover_alt,
+}).replace(/</g, '\\u003c');
+const lock = guest ? { 'data-locked': '' } : {};
 ---
-<AdminShell title={project.title} current="projects">
+<AdminShell title={`Editing ${project.title}`} current="projects">
+  <script type="application/json" id="ed-data" set:html={data} />
   <header class="ed-head">
     <div>
-      <p class="ed-crumb"><a href="/admin#projects">Projects</a> / {project.title}</p>
-      <h1>{project.title}</h1>
-      <p>The story editor arrives in the next ticket.</p>
+      <p class="ed-crumb"><a href="/admin#projects">Projects</a> / <span data-title-echo>{project.title}</span></p>
+      <h1 data-title-echo>{project.title}</h1>
+      <p style="display:flex;gap:.8rem;align-items:center;flex-wrap:wrap">
+        <span class={`badge ${published ? 'pub' : 'draft'}`} data-status-badge>{published ? 'Published' : 'Draft'}</span>
+        {project.is_sample && <span class="badge sample">Sample</span>}
+        <span class="badge feat" data-feat-badge hidden={!project.featured}>★ Featured</span>
+        <span class="autosave" data-autosave role="status" aria-live="polite"><span class="adot"></span><span data-autosave-text>{guest ? 'Autosave is off in guest mode' : 'All changes saved'}</span></span>
+      </p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" type="button" data-act="duplicate" {...lock}>{guest && <Icon class="lock" name="lock" />}<Icon name="copy" /> Duplicate</button>
+      <button class="btn btn-ghost btn-danger" type="button" data-act="delete" {...lock}>{guest && <Icon class="lock" name="lock" />}<Icon name="trash" /> Delete</button>
+      <a class="btn" href={`/projects/${project.slug}`} target="_blank" rel="noopener" data-live-link hidden={!published}><Icon name="out" /> View live</a>
+      <button class="btn" type="button" data-act="unpublish" hidden={!published} {...lock}>{guest && <Icon class="lock" name="lock" />} Unpublish</button>
+      <button class="btn btn-primary tip-left" type="button" data-act="publish" hidden={published} {...lock}>{guest && <Icon class="lock" name="lock" />} Publish</button>
     </div>
   </header>
+
+  <div class="ed-modebar">
+    <div class="seg" role="group" aria-label="Editor view">
+      <button type="button" aria-pressed="true" data-mode-btn="edit"><Icon name="gear" /> Edit</button>
+      <button type="button" aria-pressed="false" data-mode-btn="split">Split</button>
+      <button type="button" aria-pressed="false" data-mode-btn="preview"><Icon name="eye" /> Preview</button>
+    </div>
+    <span class="ed-stats" data-ed-stats>— words</span>
+  </div>
+
+  <div class="ed-form" data-ed-form data-mode="edit">
+    <div class="doc-col">
+      <div class="rt-toolbar" role="toolbar" aria-label="Formatting">
+        <select class="tb-sel" data-block-type aria-label="Block style">
+          <option value="p">Text</option>
+          <option value="h2">Heading</option>
+          <option value="h3">Subheading</option>
+          <option value="ul">Bulleted list</option>
+          <option value="ol">Numbered list</option>
+          <option value="quote">Quote</option>
+          <option value="callout">Callout</option>
+          <option value="pre">Code</option>
+          <option value="" hidden>—</option>
+        </select>
+        <span class="tb-sep"></span>
+        <button type="button" class="tb" data-cmd="bold" aria-label="Bold" title="Bold · Ctrl+B"><b>B</b></button>
+        <button type="button" class="tb" data-cmd="italic" aria-label="Italic" title="Italic · Ctrl+I"><i>I</i></button>
+        <button type="button" class="tb" data-cmd="strike" aria-label="Strikethrough" title="Strikethrough"><s>S</s></button>
+        <button type="button" class="tb" data-cmd="code" aria-label="Inline code" title="Inline code · Ctrl+E">&lt;/&gt;</button>
+        <button type="button" class="tb" data-cmd="mark" aria-label="Highlight" title="Highlight · Ctrl+Shift+H"><span class="g-mark">ab</span></button>
+        <button type="button" class="tb" data-cmd="link" aria-label="Link" title="Link · Ctrl+K"><Icon name="link" /></button>
+        <span class="tb-sep"></span>
+        <button type="button" class="tb" data-cmd="ul" aria-label="Bulleted list" title="Bulleted list · type - and a space">•</button>
+        <button type="button" class="tb" data-cmd="ol" aria-label="Numbered list" title="Numbered list · type 1. and a space">1.</button>
+        <span class="tb-sep"></span>
+        <button type="button" class="tb" data-insert aria-haspopup="menu" title="Insert a block · or type / on an empty line">+ Insert</button>
+        <span class="tb-grow"></span>
+        <button type="button" class="tb" data-hist="undo" aria-label="Undo" title="Undo · Ctrl+Z">↶</button>
+        <button type="button" class="tb" data-hist="redo" aria-label="Redo" title="Redo · Ctrl+Shift+Z">↷</button>
+      </div>
+
+      <article class="doc">
+        <h2 class="sr-only">Story</h2>
+        <input class="doc-title" data-doc-title aria-label="Project title" placeholder="Project title" maxlength="120" value={project.title} autocomplete="off">
+        <textarea class="headline doc-sum" data-doc-sum aria-label="Short summary, shown on project cards" placeholder="One sentence about what it does and for whom" maxlength="140" rows="2">{project.summary}</textarea>
+        <div class="doc-meta"><span>summary · shown on project cards</span><span data-sum-count>0 / 140</span></div>
+        <div class="doc-wrap"><div data-rt></div></div>
+        <div class="doc-foot">
+          <button type="button" class="tb" data-insert data-at-end aria-haspopup="menu">+ Add a block</button>
+          <p class="doc-hint"><span><kbd>/</kbd> blocks</span><span><kbd>##</kbd> heading</span><span><kbd>-</kbd> list</span><span><kbd>&gt;</kbd> quote</span><span><kbd>```</kbd> code</span><span><kbd>---</kbd> divider</span></p>
+        </div>
+      </article>
+    </div>
+
+    <aside class="doc-side" aria-label="Page settings">
+      <section class="card" aria-labelledby="s-cover">
+        <h2 id="s-cover">Cover</h2>
+        {project.cover_file ? <img class="side-cover" src={mediaUrl(project.cover_file)} alt={project.cover_alt} /> : <p class="muted small">No cover picture yet.</p>}
+        <p class="muted small">Changing the cover and adding pictures to the story comes with the media library.</p>
+      </section>
+
+      <section class="card" aria-labelledby="s-det">
+        <h2 id="s-det">Details</h2>
+        <div class="field"><label for="f-tags">Tags</label><div class="tag-edit" data-tags><input id="f-tags" data-tag-input placeholder="Add a tag, press Enter" maxlength="30" autocomplete="off"></div></div>
+        <div class="field"><label for="f-kind">What it is</label><input class="input" id="f-kind" data-set="kind" maxlength="120" value={project.kind}></div>
+        <div class="field"><label for="f-role">My role</label><input class="input" id="f-role" data-set="role" maxlength="120" value={project.role}></div>
+        <div class="field"><label for="f-stack">Built with</label><input class="input" id="f-stack" data-set="stack" maxlength="200" value={project.stack}></div>
+        <div class="field"><label for="f-live">Live link</label><input class="input" id="f-live" data-set="live_url" inputmode="url" maxlength="500" value={project.live_url}></div>
+        <div class="field"><label for="f-src">Source code</label><input class="input" id="f-src" data-set="src_url" inputmode="url" maxlength="500" value={project.src_url}></div>
+        <div class="two">
+          <div class="field"><label for="f-start">Started</label><input class="input" id="f-start" type="month" data-set="started" value={project.started}></div>
+          <div class="field"><label for="f-end">Finished</label><input class="input" id="f-end" type="month" data-set="finished" value={project.finished}></div>
+        </div>
+        <label class="switch"><span><strong style="font-size:.9rem">Feature on landing page</strong><br><span class="hint" style="font-size:.8rem;color:var(--muted)">Shows this project in the Featured section.</span></span><input type="checkbox" data-featured checked={project.featured}></label>
+      </section>
+    </aside>
+
+    <section class="preview" aria-labelledby="pv-h">
+      <div class="preview-bar">
+        <h2 id="pv-h" style="font-family:var(--font-display);font-size:1.15rem">Preview</h2>
+        <div class="seg" role="group" aria-label="Preview size">
+          <button type="button" aria-pressed="false" data-preview-size="phone">Phone</button>
+          <button type="button" aria-pressed="true" data-preview-size="desktop">Computer</button>
+        </div>
+      </div>
+      <div class="frame" data-preview-frame data-size="desktop">
+        <div class="frame-inner"><iframe title={`Preview of ${project.title}`} tabindex="-1" sandbox="allow-same-origin"></iframe></div>
+      </div>
+      <p class="note">This is how the page will look on the live site, including your latest edits.</p>
+    </section>
+  </div>
+
+  <div class="pop" data-pop role="menu" tabindex="-1" hidden></div>
+  <div class="bubble" data-bubble role="toolbar" aria-label="Text formatting" hidden>
+    <div class="bubble-btns">
+      <button type="button" class="tb" data-cmd="bold" aria-label="Bold"><b>B</b></button>
+      <button type="button" class="tb" data-cmd="italic" aria-label="Italic"><i>I</i></button>
+      <button type="button" class="tb" data-cmd="strike" aria-label="Strikethrough"><s>S</s></button>
+      <button type="button" class="tb" data-cmd="code" aria-label="Inline code">&lt;/&gt;</button>
+      <button type="button" class="tb" data-cmd="mark" aria-label="Highlight"><span class="g-mark">ab</span></button>
+      <button type="button" class="tb" data-cmd="link" aria-label="Link"><Icon name="link" /></button>
+    </div>
+    <form class="bubble-link" data-link-form>
+      <input type="text" inputmode="url" placeholder="Paste a link, press Enter" aria-label="Link address">
+      <button type="submit" class="tb">Apply</button>
+      <button type="button" class="tb" data-unlink>Remove</button>
+    </form>
+  </div>
+
+  <dialog class="welcome" id="del-dlg" aria-labelledby="del-h">
+    <h2 id="del-h">Delete this project?</h2>
+    <p>“{project.title}” will be removed for good. This can’t be undone.</p>
+    <div class="actions"><button class="btn btn-danger" id="del-yes" type="button">Yes, delete it</button><button class="btn" type="button" data-close autofocus>Keep it</button></div>
+  </dialog>
+
+  <script>import '../../../editor/main.ts';</script>
 </AdminShell>

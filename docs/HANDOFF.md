@@ -51,14 +51,20 @@ Run `cd app && npm test` first to confirm the baseline.
 
 T4b notes: the shell is `layouts/AdminShell.astro` (`current` prop marks the nav item; named slot `banner` is where T8's guest banner goes, and the welcome `<dialog>` can live in the page). Client behaviour is plain JS in `public/admin.js` (sign-out, `data-locked` toasts, list search/filter/feature/duplicate/delete/reorder, which only run for `main[data-role=owner]`). Project list lives on the dashboard (`/admin#projects`) as in the mockup; search and status filter are client-side over the rendered rows. `/admin/projects/[id].astro` is a stub (404 for ids a guest may not see) for T5 to replace.
 
-## Next up: T5 story editor
+## Status at end of session 3
 
-T5: port `../../chosen-5-plaintext/editor.html` to TipTap at `/admin/projects/:id` (replace the stub; keep the guest 404 rule via `getAdmin(id, role)`), autosave via `PATCH /api/projects/:id`, Edit/Split/Preview. The shell's sidebar `.ed-side` is `position:sticky;top:40px` for the banner; with no banner it is just a 40px gap-free offset, fine.
+T5 done and committed (56 tests green). Editor code lives in `app/src/editor/`: `extensions.ts` (TipTap schema matching the story HTML shape: callout, stat quote, code with `data-lang`, tables wrapped in `div.rt-table`, verbatim `mediaBlock` for figure/shots, `toStoryHtml` post-processing), `blocks.ts` (slash/insert menu items), `preview.ts` (builds the preview iframe `srcdoc` from unsaved state, mirrors `ProjectView.astro`), `main.ts` (wiring, autosave, toolbar, menus). The page `pages/admin/projects/[id].astro` embeds project data as a JSON script (`#ed-data`, `<` escaped) and loads the bundle with an Astro `<script>`.
+
+T5 notes: editor round-trips every seeded story (tested with happy-dom); blank paragraphs are dropped on save. Cover picking and inserting images/galleries/videos are deferred to T6/T5b (see BACKLOG). Preview iframe is `sandbox="allow-same-origin"` (no scripts).
+
+## Next up: T6 media
+
+Upload (owner only), `sharp` resize/WebP, alt text, media library screen, picker for cover/gallery/photo/CV; then T5b to wire the picker into the editor.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T9a (quick, 10 min) → T5 → T6 → T7 → T8 → T9 → T10.
+Suggested order: T6 → T5b → T7 → T8 → T9 → T10.
 
-T5 TipTap editor at `/admin/projects/:id` (port `../../chosen-5-plaintext/editor.html` UX: slash menu, bubble toolbar, block gutter, Edit/Split/Preview, autosave via `PATCH /api/projects/:id`; live preview = render `ProjectView.astro`'s output from unsaved state in an iframe, `srcdoc` approach used in the mockup works), T6 media (sharp), T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
+T6 media (sharp), T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 
 Known follow-ups: add `lastmod`/`ETag` caching for `/media`; hash filenames for uploads (T6) then switch to `immutable` cache; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.
