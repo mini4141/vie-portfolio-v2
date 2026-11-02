@@ -1,0 +1,10 @@
+# Continuous SQLite backup to S3-compatible storage. Needs LITESTREAM_BUCKET, LITESTREAM_REGION,
+# LITESTREAM_ACCESS_KEY_ID and LITESTREAM_SECRET_ACCESS_KEY (see devops/.env.example).
+dbs:
+  - path: /data/app.db
+    replicas:
+      - type: s3
+        bucket: ${LITESTREAM_BUCKET}
+        path: vie/app.db
+        region: ${LITESTREAM_REGION}
+        retention: 168h

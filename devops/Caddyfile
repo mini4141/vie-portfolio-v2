@@ -1,0 +1,11 @@
+# SITE_DOMAIN=vie.example.com gets a real certificate automatically; the default (localhost) uses Caddy's local CA.
+{$SITE_DOMAIN:localhost} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	reverse_proxy app:4321
+}

@@ -84,3 +84,10 @@ test('404 page', async () => {
   assert.equal(r.status, 404);
   assert.match(await r.text(), /404 — not found/);
 });
+
+test('healthz answers ok without a session, and never cached', async () => {
+  const r = await s.req('/healthz');
+  assert.equal(r.status, 200);
+  assert.equal(await r.text(), 'ok');
+  assert.equal(r.headers.get('cache-control'), 'no-store');
+});

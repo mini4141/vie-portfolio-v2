@@ -73,12 +73,16 @@ T5b-2 done: `src/editor/context.ts` (`contextFor(editor)` returns the callout/ta
 
 T5b-3 done: `src/editor/gutter.ts` (pure block ops by top-level index: `moveBlock`, `duplicateBlock`, `deleteBlock`, `addParagraphAfter`, `TURN_INTO`; tested with a real `Editor` in `tests/gutter.test.ts`). `main.ts` wires the hover gutter (`[data-gutter]` in the page), drag/drop with `.drop-line`, and the block menu (a `.pop` appended to body). Gotchas: the gutter is hidden below 860px (the browser pane is often narrower; use `resize_window` to 1400); the editor keeps an empty trailing paragraph after a final heading (dropped on save); a tall block's top can sit under the sticky `.rt-toolbar`, so the gutter is clamped into the visible part. T5b is complete.
 
-## Next up: T9 devops (Dockerfile, compose, Caddy, Litestream, CI), then T10 hardening
+## Status at end of session 4 (continued)
+
+T9 done (see BACKLOG for what was and was not verified). Docker is installed on the dev machine, so images can be built locally: `docker build -f devops/Dockerfile -t vie-portfolio .`. New public endpoint `/healthz` (db check, no auth, `no-store`). **Lockfile gotcha:** never regenerate `app/package-lock.json` with Windows npm alone; it drops the optional `@emnapi/*` entries and `npm ci` then fails on Linux. Regenerate in a container: `docker run --rm -v "<abs path to app>:/w" -w /w node:24-bookworm-slim npm install --package-lock-only --ignore-scripts`.
+
+## Next up: T10 hardening (CSP + security headers, self-host fonts, a11y pass, perf budget, README) and a change-password screen (no way to change the owner password yet); rehearse the Litestream restore once with a real bucket
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T9 → T10.
+Suggested order: T10.
 
-T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
+T10 hardening (CSP, self-host fonts, a11y, README).
 
 Known follow-ups: add `lastmod`/`ETag` caching for `/media`; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.

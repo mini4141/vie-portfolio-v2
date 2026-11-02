@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+      - name: Install, build and test (Linux catches Windows-only passes)
+        working-directory: app
+        run: |
+          npm ci
+          npm test
+
+  image:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -f devops/Dockerfile -t vie-portfolio .
+      - name: Smoke test the container
+        run: |
+          docker volume create smoke-data
+          docker run -d --name smoke -p 4321:4321 -v smoke-data:/data \
+            -e OWNER_EMAIL=ci@example.com -e OWNER_PASSWORD=ci-password-123456 vie-portfolio
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4321/healthz && break; sleep 2; done
+          curl -fsS http://127.0.0.1:4321/healthz
+          curl -fsS http://127.0.0.1:4321/ | grep -qi "<html"
+          test "$(docker exec smoke id -u)" != "0"
+      - name: Show logs on failure
+        if: failure()
+        run: docker logs smoke
