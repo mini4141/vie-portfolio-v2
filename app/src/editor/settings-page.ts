@@ -37,4 +37,18 @@ $('[data-pick=share]').addEventListener('click', async () => {
 });
 clear.addEventListener('click', () => { if (!data.guest) showShare(null); });
 
+const passForm = $<HTMLFormElement>('[data-pass-form]'), passMsg = $('[data-pass-msg]');
+passForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (data.guest) return;
+  const cur = (passForm.elements.namedItem('current') as HTMLInputElement), next = (passForm.elements.namedItem('next') as HTMLInputElement);
+  const say = (m: string, ok = false) => { passMsg.textContent = m; passMsg.classList.add('show'); passMsg.toggleAttribute('data-ok', ok); };
+  if (!cur.value || next.value.length < 10) return say('Enter your current password and a new one of at least 10 characters.');
+  try {
+    const r = await fetch('/api/account/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ current: cur.value, next: next.value }) });
+    const j = await r.json().catch(() => ({})) as { message?: string };
+    if (r.ok) { cur.value = ''; next.value = ''; say(j.message ?? 'Password changed.', true); } else say(j.message ?? 'Something went wrong. Please try again.');
+  } catch { say('Can’t reach the server. Check your connection.'); }
+});
+
 saver.baseline();

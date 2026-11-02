@@ -42,7 +42,6 @@ We develop on Windows but deploy to Linux. Rules: exact-case filenames and impor
 - Astro's `Astro.url.host` is not the real Host behind a proxy; CSRF check compares `Origin` to the `Host` header / `SITE_URL` / `X-Forwarded-Host`.
 - Set `TRUST_PROXY=1` behind Caddy so lockout keys use `X-Forwarded-For`.
 - Don't `taskkill node.exe` broadly; stop the dev server by port (PowerShell `Get-NetTCPConnection -LocalPort 4321`).
-- Google Fonts are loaded from the CDN (mockup parity); self-host them in T10 for privacy/speed.
 
 ## Status at end of session 2
 
@@ -77,12 +76,21 @@ T5b-3 done: `src/editor/gutter.ts` (pure block ops by top-level index: `moveBloc
 
 T9 done (see BACKLOG for what was and was not verified). Docker is installed on the dev machine, so images can be built locally: `docker build -f devops/Dockerfile -t vie-portfolio .`. New public endpoint `/healthz` (db check, no auth, `no-store`). **Lockfile gotcha:** never regenerate `app/package-lock.json` with Windows npm alone; it drops the optional `@emnapi/*` entries and `npm ci` then fails on Linux. Regenerate in a container: `docker run --rm -v "<abs path to app>:/w" -w /w node:24-bookworm-slim npm install --package-lock-only --ignore-scripts`.
 
-## Next up: T10 hardening (CSP + security headers, self-host fonts, a11y pass, perf budget, README) and a change-password screen (no way to change the owner password yet); rehearse the Litestream restore once with a real bucket
+## Status at end of session 4 (T10)
+
+T10 done (109 tests). Things to know:
+- **CSP:** `script-src 'self'` only. Any new page script must be a file. Astro would inline tiny `<script>` blocks; `assetsInlineLimit: 0` prevents it and `tests/hardening.test.ts` fails if an inline script or remote asset appears. `style-src` keeps `'unsafe-inline'` (accent `<style>` and `style=""` attributes).
+- Our own pages cannot be framed (CSP + X-Frame-Options), so same-origin iframe-based audits don't work; navigate instead. The editor preview iframe uses `srcdoc`, which is fine.
+- Theme: `<html data-default-theme>` + `/theme.js` (blocking, in head).
+- Password change shares the sign-in throttle (per address), so repeated wrong guesses also pause sign-in for that address for 15 minutes.
+- Accessibility: scripted audit (names, labels, alt, headings, main landmark, contrast in light and dark) is clean on landing, projects, a project, dashboard, settings. Not audited with a real screen reader, and profile/media/editor were checked less thoroughly after the contrast fixes.
+
+## Next up: nothing scheduled. Candidates: rehearse the Litestream restore with a real bucket; back up `/data/uploads`; run the GitHub Actions workflow for the first time; audit profile/media/editor screens again; real-device checks.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T10.
+All planned tickets (T1-T10) are done; see "Next up" for candidates.
 
-T10 hardening (CSP, self-host fonts, a11y, README).
+
 
 Known follow-ups: add `lastmod`/`ETag` caching for `/media`; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.

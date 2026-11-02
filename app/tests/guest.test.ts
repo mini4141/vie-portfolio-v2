@@ -68,5 +68,6 @@ test('shipped client script handles expiry and the sign-in page explains it', as
   assert.match(js, /expired=1/);
   assert.match(js, /status === 401/);
   const signin = await (await s.req('/admin/signin')).text();
-  assert.match(signin, /Your session has ended/);
+  const src = /<script type="module" src="([^"]+)"/.exec(signin)![1]!; // the sign-in logic ships as a file (CSP allows no inline scripts)
+  assert.match(await (await s.req(src)).text(), /Your session has ended/);
 });

@@ -56,6 +56,17 @@ const SWATCHES = ['#12805C', '#2F6FED', '#B4512E', '#7A4FD6', '#C0392B', '#1F293
       <h2 id="st-guest">Guest mode</h2>
       <label class="switch"><span><strong style="font-size:.9rem">Let people try the editor as a guest</strong><br><span class="hint" style="font-size:.8rem;color:var(--muted)">Guests can look around for an hour but can’t change or save anything. Your real drafts and email stay hidden.</span></span><input type="checkbox" data-guest checked={s.guest_enabled}></label>
     </section>
+
+    <section class="card" aria-labelledby="st-pass">
+      <h2 id="st-pass">Password</h2>
+      <form data-pass-form autocomplete="off" novalidate>
+        <input type="text" name="username" autocomplete="username" value={Astro.locals.auth.email ?? ''} hidden aria-hidden="true" tabindex="-1">
+        <div class="field"><label for="pw-cur">Current password</label><input class="input" id="pw-cur" name="current" type="password" autocomplete="current-password" {...(guest ? { disabled: true } : {})}></div>
+        <div class="field"><label for="pw-new">New password <span class="hint">(at least 10 characters)</span></label><input class="input" id="pw-new" name="next" type="password" autocomplete="new-password" minlength="10" {...(guest ? { disabled: true } : {})}></div>
+        <p class="err" data-pass-msg role="alert"></p>
+        <button class="btn" type="submit" {...lock}>{guest && <Icon class="lock" name="lock" />} Change password</button>
+      </form>
+    </section>
   </div>
 
   <script>import '../../editor/settings-page.ts';</script>

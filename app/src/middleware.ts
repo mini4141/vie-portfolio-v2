@@ -1,6 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { resolveSession, SESSION_COOKIE, VISITOR } from './lib/auth.ts';
 import { getSettings } from './lib/queries.ts';
+import { withSecurityHeaders } from './lib/headers.ts';
 
 const json = (status: number, body: Record<string, unknown>, headers: Record<string, string> = {}) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...headers } });
@@ -18,7 +19,11 @@ function sameOrigin(req: Request, url: URL): boolean {
   } catch { return false; }
 }
 
-export const onRequest = defineMiddleware(async (ctx, next) => {
+const https = () => (process.env.SITE_URL ?? '').startsWith('https:');
+
+export const onRequest = defineMiddleware(async (ctx, next) => withSecurityHeaders(await guard(ctx, next), https()));
+
+const guard = async (ctx: Parameters<Parameters<typeof defineMiddleware>[0]>[0], next: Parameters<Parameters<typeof defineMiddleware>[0]>[1]): Promise<Response> => {
   const { pathname } = ctx.url;
   const guarded = pathname.startsWith('/admin') || pathname.startsWith('/api');
   if (!guarded) return next();
@@ -48,4 +53,4 @@ export const onRequest = defineMiddleware(async (ctx, next) => {
   const res = await next();
   res.headers.set('Cache-Control', 'no-store');
   return res;
-});
+};

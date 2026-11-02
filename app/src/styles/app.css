@@ -68,3 +68,11 @@ dialog.picker .err{margin:0}
 .ctxbar .tb:hover{background:#2c322f;color:#fff}
 .ctxbar .tb[aria-pressed=true]{background:rgba(74,222,154,.16);color:#4ADE9A}
 .ctxbar .tb[data-danger]{color:#f0a3a3}
+.err[data-ok]{color:var(--accent);background:var(--accent-soft)}
+
+/* contrast fixes (WCAG AA, checked in both themes) */
+:root{--muted:#62685F}
+.hash{color:#8f5d0f}
+.badge.pub{color:#17703c;border-color:color-mix(in srgb,#17703c 35%,transparent)}
+:root[data-theme=dark] .badge.pub{color:#4ADE9A;border-color:color-mix(in srgb,#4ADE9A 35%,transparent)}
+:root[data-theme=dark] .btn-danger,:root[data-theme=dark] .pop-i.danger,:root[data-theme=dark] .pop-i.danger .gl,:root[data-theme=dark] .doc-meta .over{color:#ff8a8a}

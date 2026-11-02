@@ -9,24 +9,16 @@ const s = getSettings();
 const accent = /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent : '#12805C';
 ---
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="light" data-default-theme={s.default_theme}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="light dark">
   <title>{title} · Editor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?display=swap&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600">
-  <script is:inline define:vars={{ def: s.default_theme }}>
-    (function () {
-      var d = document.documentElement, t = null;
-      d.classList.add('js');
-      try { t = localStorage.getItem('vie-theme'); } catch (e) {}
-      d.dataset.theme = t || (def === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : def);
-    })();
-  </script>
+  <link rel="preload" href="/fonts/plex-sans-400-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/fonts/fonts.css">
+  <script is:inline src="/theme.js"></script>
   <style is:global set:html={`:root{--accent:${accent};--accent-soft:color-mix(in srgb,${accent} 12%,transparent)}:root[data-theme=dark]{--accent:color-mix(in srgb,${accent} 55%,white);--accent-soft:color-mix(in srgb,${accent} 22%,transparent)}`}></style>
 </head>
 <body class={bodyClass}>

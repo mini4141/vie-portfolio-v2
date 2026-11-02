@@ -7,4 +7,6 @@ export default defineConfig({
   security: { checkOrigin: true },
   devToolbar: { enabled: false },
   server: { host: true },
+  // never inline scripts into pages: the CSP only allows script files from our own origin
+  vite: { build: { assetsInlineLimit: 0 } },
 });

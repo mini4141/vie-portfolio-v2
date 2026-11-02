@@ -84,3 +84,21 @@ export function checkCredentials(email: string, password: string): { id: number;
   const ok = verifyPassword(password, u?.password_hash ?? DUMMY_HASH);
   return u && ok ? { id: u.id, email: u.email } : null;
 }
+
+/* ---------- change password ---------- */
+
+export const MIN_PASSWORD = 10;
+
+export type PasswordChange = { ok: true } | { ok: false; status: number; error: string; message: string };
+
+/** Verifies the current password, stores the new hash and signs out every other session of this user. */
+export function changePassword(userId: number, current: string, next: string, keepToken: string | undefined): PasswordChange {
+  if (next.length < MIN_PASSWORD) return { ok: false, status: 400, error: 'too_short', message: `Use at least ${MIN_PASSWORD} characters for the new password.` };
+  if (next.length > 200) return { ok: false, status: 400, error: 'too_long', message: 'That password is too long (200 characters at most).' };
+  if (next === current) return { ok: false, status: 400, error: 'same', message: 'The new password must be different from the current one.' };
+  const u = db().prepare('SELECT password_hash FROM users WHERE id = ?').get(userId) as { password_hash: string } | undefined;
+  if (!u || !verifyPassword(current, u.password_hash)) return { ok: false, status: 403, error: 'wrong_password', message: 'The current password is not right.' };
+  db().prepare('UPDATE users SET password_hash = ? WHERE id = ?').run(hashPassword(next), userId);
+  db().prepare('DELETE FROM sessions WHERE user_id = ? AND id != ?').run(userId, keepToken ? sha(keepToken) : '');
+  return { ok: true };
+}
