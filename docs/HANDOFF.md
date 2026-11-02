@@ -1,6 +1,6 @@
 # Handoff notes (for the next dev session)
 
-Read `BACKLOG.md` for ticket status and the requirements doc in the folder above this repo for scope.
+Read `PRACTICES.md` first (how we test, commit and stop), then `BACKLOG.md` for ticket status and the requirements doc in the folder above this repo for scope.
 Reference UI: `../../chosen-5-plaintext/*.html` (static mockups; `editor.html` has a working vanilla-JS block editor prototype to port to TipTap).
 
 ## Run it
