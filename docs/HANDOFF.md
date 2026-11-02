@@ -30,6 +30,10 @@ To reset dev data: stop the server, delete `app/data/`, run `npm run seed`.
 - API tests: `tests/*.test.ts` using `tests/helpers.ts` (`startServer()` seeds a temp db and boots `dist/`). After changing app code run `npm run build` (or `npm test`, which builds).
 - Browser checks: serve with `node --env-file=.env dist/server/entry.mjs`, use the in-app browser at 127.0.0.1:4321.
 
+## Windows dev → Linux prod (read before touching files/paths/Docker)
+
+We develop on Windows but deploy to Linux. Rules: exact-case filenames and imports (Linux is case-sensitive); use `node:path` (`resolve`, `sep`), never hard-coded `\` or `/`; LF line endings (see ticket T9a); never copy `node_modules` into an image (`sharp` ships per-OS binaries); keep `/data` on a Docker named volume, not a Windows bind mount (SQLite WAL); pin Node 24 (`node:sqlite` is experimental); run containers as non-root. No Docker is needed for everyday dev. Full list in BACKLOG ("Decisions", T9a, T9).
+
 ## Gotchas learned
 
 - Test DB edits from a second process: backdate timestamps by a minute, not 1 ms (cross-process clock skew made a test flaky).
@@ -54,6 +58,8 @@ Port `../../chosen-5-plaintext/dashboard.html` (sidebar `.ed-side`, header, `.st
 4. Tests: HTTP tests that `/admin` renders counts/recent for owner and guest, that a guest page contains `data-locked` on New/Delete/Duplicate and no real-draft titles; browser-check at desktop + phone width (`.ed-body` collapses <860px).
 
 ## After that (see BACKLOG for detail)
+
+Suggested order: T4b → T9a (quick, 10 min) → T5 → T6 → T7 → T8 → T9 → T10.
 
 T5 TipTap editor at `/admin/projects/:id` (port `../../chosen-5-plaintext/editor.html` UX: slash menu, bubble toolbar, block gutter, Edit/Split/Preview, autosave via `PATCH /api/projects/:id`; live preview = render `ProjectView.astro`'s output from unsaved state in an iframe, `srcdoc` approach used in the mockup works), T6 media (sharp), T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 
