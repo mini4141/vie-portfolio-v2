@@ -4,6 +4,7 @@ import { storyExtensions, toStoryHtml } from './extensions.ts';
 import { buildPreview } from './preview.ts';
 import { INSERTS, filterInserts, imageHtml, galleryHtml, type InsertItem } from './blocks.ts';
 import { pickMedia } from './media-client.ts';
+import { contextFor } from './context.ts';
 import { editFigure, readFigure, figuresOf } from './picture.ts';
 
 interface Data { id: number; role: string; slug: string; status: string; title: string; summary: string; story_html: string; tags: string[]; cover_id: number | null; cover: string; cover_alt: string }
@@ -290,6 +291,37 @@ linkInput.addEventListener('keydown', (e) => { if (e.key === 'Escape') { hideBub
 bubble.addEventListener('mousedown', (e) => { if (!(e.target as HTMLElement).closest('input')) e.preventDefault(); });
 editor.on('blur', ({ event }) => { if (!(event as FocusEvent | undefined)?.relatedTarget || !bubble.contains((event as FocusEvent).relatedTarget as Node)) { if (bubbleMode !== 'link') hideBubble(); } });
 document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && editor.isFocused) { e.preventDefault(); openLink(); } });
+
+/* ---------- block bar: callout kind, table rows/columns ---------- */
+const ctxBar = $('[data-ctx]')!;
+let ctxKey = '';
+function updateCtx() {
+  const ctx = editor.isFocused || ctxBar.contains(document.activeElement) ? contextFor(editor) : null;
+  if (!ctx || !bubble.hidden) { ctxBar.hidden = true; ctxKey = ''; return; }
+  const key = `${ctx.kind}:${ctx.actions.map((a) => `${a.id}${a.pressed ? '*' : ''}`).join()}`;
+  if (key !== ctxKey) {
+    ctxKey = key;
+    ctxBar.replaceChildren(...ctx.actions.map((a) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tb'; b.textContent = a.label;
+      if (a.pressed !== undefined) b.setAttribute('aria-pressed', String(a.pressed));
+      if (a.danger) b.dataset.danger = '';
+      b.addEventListener('click', () => a.run());
+      return b;
+    }));
+    ctxBar.setAttribute('aria-label', `${ctx.label} options`);
+  }
+  ctxBar.hidden = false;
+  const r = ctx.el.getBoundingClientRect(), w = ctxBar.offsetWidth;
+  if (r.bottom < 90 || r.top > innerHeight) { ctxBar.hidden = true; return; } // scrolled out of view
+  ctxBar.style.left = `${Math.max(8, Math.min(r.left, innerWidth - w - 8))}px`;
+  ctxBar.style.top = `${Math.max(8, r.top - ctxBar.offsetHeight - 6)}px`;
+}
+ctxBar.addEventListener('mousedown', (e) => e.preventDefault());
+editor.on('transaction', updateCtx);
+editor.on('blur', () => setTimeout(updateCtx, 0));
+addEventListener('scroll', updateCtx, true);
+addEventListener('resize', updateCtx);
 
 /* ---------- modes + preview ---------- */
 const form = $('[data-ed-form]')!, frame = $('[data-preview-frame]')!, iframe = $<HTMLIFrameElement>('iframe', frame)!;

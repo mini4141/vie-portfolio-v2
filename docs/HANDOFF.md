@@ -69,11 +69,13 @@ T8 done (tests green incl. `tests/guest.test.ts`). `AdminShell` renders the gues
 
 T5b-1 done: `src/editor/picture.ts` (`readFigure`, `editFigure`, pure DOM helpers, unit-tested in `tests/editor.test.ts`); `main.ts` opens the "Edit picture" dialog on double-click of any `figure` inside a `mediaBlock`. Gotcha: for a single picture the block *is* the figure (index 0); galleries are `div.shots` with several figures.
 
-## Next up: T5b-2 callout switcher + table controls, then T5b-3 block gutter, T9, T10
+T5b-2 done: `src/editor/context.ts` (`contextFor(editor)` returns the callout/table around the cursor plus its actions; unit-tested with a real TipTap `Editor` in happy-dom in `tests/context.test.ts`, which needs a `requestAnimationFrame` shim). `main.ts` renders them into `[data-ctx]` (reuses `.bubble` styling, `.ctxbar` in `app.css`), hidden while the text bubble shows or the block is scrolled out of view. Browser testing tip: synthetic selections don't focus the editor; use real clicks via element refs, since coordinates drift after `scrollIntoView`.
+
+## Next up: T5b-3 block gutter (drag handle + block menu), then T9, T10
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T5b-2 → T5b-3 → T9 → T10.
+Suggested order: T5b-3 → T9 → T10.
 
 T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 

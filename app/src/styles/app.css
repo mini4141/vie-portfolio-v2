@@ -61,3 +61,10 @@ dialog.picker .err{margin:0}
 .swatch{width:2rem;height:2rem;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
 .swatch:hover{box-shadow:0 0 0 2px var(--fg)}
 @media (max-width:860px){.pf-grid{grid-template-columns:1fr}.list-row{grid-template-columns:1fr}}
+
+/* block bar over a callout or table */
+.ctxbar{z-index:105}
+.ctxbar .tb{color:#c9d1cc;height:28px;padding:0 .6rem;font-size:.8rem;white-space:nowrap}
+.ctxbar .tb:hover{background:#2c322f;color:#fff}
+.ctxbar .tb[aria-pressed=true]{background:rgba(74,222,154,.16);color:#4ADE9A}
+.ctxbar .tb[data-danger]{color:#f0a3a3}
