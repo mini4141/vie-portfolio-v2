@@ -4,6 +4,7 @@ import { storyExtensions, toStoryHtml } from './extensions.ts';
 import { buildPreview } from './preview.ts';
 import { INSERTS, filterInserts, imageHtml, galleryHtml, type InsertItem } from './blocks.ts';
 import { pickMedia } from './media-client.ts';
+import { editFigure, readFigure, figuresOf } from './picture.ts';
 
 interface Data { id: number; role: string; slug: string; status: string; title: string; summary: string; story_html: string; tags: string[]; cover_id: number | null; cover: string; cover_alt: string }
 
@@ -326,6 +327,66 @@ $$('[data-preview-size]').forEach((b) => b.addEventListener('click', () => {
 }));
 addEventListener('resize', () => { if (mode !== 'edit') fitFrame(); });
 new MutationObserver(() => { if (mode !== 'edit') renderPreview(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ---------- edit an existing picture, video or gallery figure ---------- */
+function editPictureDialog(blockPos: number, index: number) {
+  const node = editor.state.doc.nodeAt(blockPos);
+  if (!node || node.type.name !== 'mediaBlock') return;
+  const host = document.createElement('div');
+  host.innerHTML = node.attrs.html;
+  const fig = figuresOf(host)[index];
+  if (!fig) return;
+  const f = readFigure(fig);
+  let replacement: { url: string; alt: string; original_name: string } | null = null;
+  const dlg = document.createElement('dialog');
+  dlg.className = 'welcome picker';
+  dlg.setAttribute('aria-label', 'Edit picture');
+  dlg.innerHTML = `<div class="picker-head"><h2>Edit picture</h2></div>
+    <div class="picker-foot">
+      <p class="hint" data-file></p>
+      <label class="field"${f.hasAlt ? '' : ' hidden'}><span class="flabel">Description <span class="hint">(for screen readers)</span></span><input class="input" data-alt maxlength="300"></label>
+      <label class="field"><span class="flabel">Caption <span class="hint">(shown under the picture)</span></span><input class="input" data-cap maxlength="300"></label>
+      <div class="actions"><button type="button" class="btn btn-primary" data-ok>Done</button>${f.hasAlt ? '<button type="button" class="btn" data-replace>Replace picture</button>' : ''}<button type="button" class="btn" data-no>Cancel</button></div>
+    </div>`;
+  const q = <T extends HTMLElement>(sel: string) => dlg.querySelector<T>(sel)!;
+  q('[data-file]').textContent = f.name;
+  q<HTMLInputElement>('[data-alt]').value = f.alt;
+  q<HTMLInputElement>('[data-cap]').value = f.caption;
+  dlg.querySelector('[data-replace]')?.addEventListener('click', async () => {
+    const got = await pickMedia({ kind: 'image', title: 'Choose a replacement picture' });
+    if (!got?.[0]) return;
+    replacement = got[0];
+    q('[data-file]').textContent = got[0].original_name;
+    q<HTMLInputElement>('[data-alt]').value = got[0].alt;
+  });
+  q('[data-no]').addEventListener('click', () => dlg.close());
+  q('[data-ok]').addEventListener('click', () => {
+    const html = editFigure(node.attrs.html, index, {
+      alt: f.hasAlt ? q<HTMLInputElement>('[data-alt]').value.trim() : undefined,
+      caption: q<HTMLInputElement>('[data-cap]').value,
+      replace: replacement ?? undefined,
+    });
+    if (html !== node.attrs.html) editor.view.dispatch(editor.state.tr.setNodeMarkup(blockPos, undefined, { html }));
+    dlg.close();
+  });
+  dlg.addEventListener('close', () => { dlg.remove(); editor.commands.focus(); });
+  document.body.appendChild(dlg);
+  dlg.showModal();
+  q<HTMLInputElement>('[data-cap]').focus();
+}
+editor.view.dom.addEventListener('dblclick', (e) => {
+  const fig = (e.target as HTMLElement).closest('figure');
+  if (!fig) return;
+  const block = fig.closest('.shots') ?? fig;
+  let hit = -1;
+  editor.state.doc.descendants((n, pos) => {
+    if (n.type.name === 'mediaBlock' && editor.view.nodeDOM(pos) === block) hit = pos;
+    return false;
+  });
+  if (hit < 0) return;
+  e.preventDefault();
+  editPictureDialog(hit, block === fig ? 0 : Array.from(block.querySelectorAll('figure')).indexOf(fig));
+});
 
 /* ---------- cover ---------- */
 const coverImg = $<HTMLImageElement>('[data-cover]')!, noCover = $('[data-no-cover]')!, coverClear = $('[data-cover-clear]')!;

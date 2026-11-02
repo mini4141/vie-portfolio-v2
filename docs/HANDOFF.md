@@ -67,13 +67,13 @@ T7 done and committed (76 tests). `src/lib/site.ts` validates profile/settings p
 
 T8 done (tests green incl. `tests/guest.test.ts`). `AdminShell` renders the guest banner (`data-guest-timer data-expires=<session expiry ms>`) and the welcome `<dialog data-guest-note>` for guests only. `public/admin.js` wraps `window.fetch`: any 401 from `/api/*` (not `/api/auth/*`) or the countdown hitting zero redirects to `/admin/signin?expired=1`, which shows "Your session has ended". "Leave guest mode" POSTs logout then goes to `/`. Welcome note is remembered in `sessionStorage` (`vie-guest-seen`).
 
-## Next up: T5b editor polish
+T5b-1 done: `src/editor/picture.ts` (`readFigure`, `editFigure`, pure DOM helpers, unit-tested in `tests/editor.test.ts`); `main.ts` opens the "Edit picture" dialog on double-click of any `figure` inside a `mediaBlock`. Gotcha: for a single picture the block *is* the figure (index 0); galleries are `div.shots` with several figures.
 
-Caption/alt editing on picture blocks, replace picture, block gutter (drag/menu), table row/column controls, callout kind switcher. Then T9, T10.
+## Next up: T5b-2 callout switcher + table controls, then T5b-3 block gutter, T9, T10
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T5b → T9 → T10.
+Suggested order: T5b-2 → T5b-3 → T9 → T10.
 
 T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 

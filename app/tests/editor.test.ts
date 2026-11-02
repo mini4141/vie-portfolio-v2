@@ -60,3 +60,40 @@ test('picture and gallery blocks built by the picker survive the editor and esca
   assert.match(out, /class="shots"/);
   assert.match(out, /<img src="\/media\/abc123abc123-a\.webp" alt="A &quot;quoted&quot; &lt;b&gt;alt&lt;\/b&gt;" ?\/?>/);
 });
+
+const { editFigure, readFigure, figuresOf } = await import('../src/editor/picture.ts');
+const fig = '<figure class="rt-img"><div class="win"><div class="win-bar"><i></i><i></i><i></i><span>a.jpg</span></div><img src="/media/a.webp" alt="old"></div><figcaption>old cap</figcaption></figure>';
+const shots = `<div class="shots">${fig.replace('a.jpg', 'one.jpg')}${fig.replace('a.jpg', 'two.jpg').replace('<figcaption>old cap</figcaption>', '')}</div>`;
+
+test('picture editing: alt and caption change, empty caption removes it, new caption is added', () => {
+  const r = readFigure(figuresOf(document.createElement('div').appendChild(Object.assign(document.createElement('div'), { innerHTML: fig })) as unknown as ParentNode)[0]!);
+  assert.deepEqual(r, { alt: 'old', caption: 'old cap', hasAlt: true, name: 'a.jpg' });
+  assert.match(editFigure(fig, 0, { alt: 'new', caption: 'fresh' }), /alt="new"[^>]*><\/div><figcaption>fresh<\/figcaption>/);
+  assert.doesNotMatch(editFigure(fig, 0, { caption: '  ' }), /figcaption/);
+  assert.match(editFigure(shots, 1, { caption: 'added' }), /two\.jpg[\s\S]*<figcaption>added<\/figcaption>/);
+  assert.equal((editFigure(shots, 1, { caption: 'added' }).match(/old cap/g) ?? []).length, 1, 'only the chosen figure changed');
+});
+
+test('picture editing: replace swaps file and label, keeps caption; markup in text stays text; sanitiser still accepts the result', () => {
+  const out = editFigure(fig, 0, { replace: { url: '/media/b.webp', alt: 'b alt', original_name: 'b.jpg' } });
+  assert.match(out, /src="\/media\/b\.webp"/);
+  assert.match(out, /<span>b\.jpg<\/span>/);
+  assert.match(out, /alt="b alt"/);
+  assert.match(out, /<figcaption>old cap<\/figcaption>/);
+  const evil = editFigure(fig, 0, { caption: '<img src=x onerror=alert(1)>', alt: '"><script>x</script>' });
+  const probe = document.createElement('div'); probe.innerHTML = evil;
+  assert.equal(probe.querySelectorAll('script').length, 0, 'no script element');
+  assert.equal(probe.querySelectorAll('img').length, 1, 'caption text did not become an image');
+  assert.doesNotMatch(sanitizeStory(evil), /<script/);
+  assert.match(sanitizeStory(evil), /<figure class="rt-img">/);
+  assert.equal(editFigure(fig, 5, { alt: 'x' }), fig, 'unknown figure leaves html alone');
+});
+
+test('video embeds only get a caption, never a description', () => {
+  const emb = '<figure class="rt-embed"><div class="win"><div class="win-bar"><i></i><span>yt</span></div><a class="embed" href="https://youtu.be/x"><img src="/m/t.webp" alt=""></a></div><figcaption>tour</figcaption></figure>';
+  const host = document.createElement('div'); host.innerHTML = emb;
+  assert.equal(readFigure(figuresOf(host)[0]!).hasAlt, false);
+  const out = editFigure(emb, 0, { alt: 'nope', caption: 'tour 2' });
+  assert.match(out, /alt=""/);
+  assert.match(out, /tour 2/);
+});

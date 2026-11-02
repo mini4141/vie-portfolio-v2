@@ -19,6 +19,7 @@ test('editor page ships the editing surface, its bundle and the project data', a
   const { status, html } = await page('/admin/projects/1', ownCookie);
   assert.equal(status, 200);
   for (const hook of ['data-rt', 'data-doc-title', 'data-doc-sum', 'data-block-type', 'data-mode-btn="split"', 'data-preview-frame', 'data-tags', 'data-autosave']) assert.ok(html.includes(hook), hook);
+  assert.match(html, /double-click a picture to edit it/);
   assert.match(html, /<script type="module" src="\/_astro\/[^"]+\.js"/, 'editor bundle is referenced');
   const d = embedded(html);
   assert.equal(d.id, 1);
