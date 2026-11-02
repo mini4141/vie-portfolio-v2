@@ -1,0 +1,4 @@
+/* additions on top of the shared mockup stylesheet (site.css) */
+.embed .play::before{content:"";border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent currentColor;margin-left:4px}
+.rt .win img{width:100%;height:auto}
+.rt .shots figure{margin:0}

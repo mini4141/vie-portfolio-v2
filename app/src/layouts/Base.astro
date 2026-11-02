@@ -1,0 +1,60 @@
+---
+import '../styles/site.css';
+import '../styles/app.css';
+import Icon from '../components/Icon.astro';
+import { getSettings, getProfile, mediaUrl } from '../lib/queries.ts';
+
+interface Props { title?: string; description?: string; image?: string | null; prompt?: string; nav?: 'work' | ''; noindex?: boolean }
+const s = getSettings(), p = getProfile();
+const { title, description = s.description, image = mediaUrl(s.share_file), prompt = '~', nav = '', noindex = false } = Astro.props;
+const origin = (process.env.SITE_URL ?? Astro.url.origin).replace(/\/$/, '');
+const fullTitle = title ? `${title} — ${p.name || s.site_title}` : s.site_title;
+const canonical = origin + Astro.url.pathname;
+const accent = /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent : '#12805C';
+---
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{fullTitle}</title>
+  <meta name="description" content={description}>
+  <link rel="canonical" href={canonical}>
+  {noindex && <meta name="robots" content="noindex">}
+  <meta property="og:type" content="website">
+  <meta property="og:title" content={fullTitle}>
+  <meta property="og:description" content={description}>
+  <meta property="og:url" content={canonical}>
+  {image && <meta property="og:image" content={origin + image}>}
+  <meta name="twitter:card" content={image ? 'summary_large_image' : 'summary'}>
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312805C'/%3E%3Ctext x='16' y='21' font-family='monospace' font-size='14' font-weight='700' fill='white' text-anchor='middle'%3E~/%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?display=swap&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600">
+  <script is:inline define:vars={{ def: s.default_theme }}>
+    (function () {
+      var d = document.documentElement, t = null;
+      d.classList.add('js');
+      try { t = localStorage.getItem('vie-theme'); } catch (e) {}
+      d.dataset.theme = t || (def === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : def);
+    })();
+  </script>
+  <style is:global set:html={`:root{--accent:${accent};--accent-soft:color-mix(in srgb,${accent} 12%,transparent)}:root[data-theme=dark]{--accent:color-mix(in srgb,${accent} 55%,white);--accent-soft:color-mix(in srgb,${accent} 22%,transparent)}`}></style>
+</head>
+<body class="pub">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="top">
+    <a class="prompt" href="/"><span class="u">vie@jakarta</span>:<span class="p">{prompt}</span>$<span class="caret" aria-hidden="true"></span></a>
+    <nav aria-label="Main">
+      <a href="/#about">about</a>
+      <a href="/projects" aria-current={nav === 'work' ? 'page' : undefined}>work</a>
+      <a href="/#contact">contact</a>
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch colour mode"><Icon class="i-moon" name="moon" /><Icon class="i-sun" name="sun" /></button>
+    </nav>
+  </header>
+  <slot />
+  <footer class="foot"><span># © {new Date().getFullYear()} {p.name}</span><a href="/admin/signin">Try the editor →</a></footer>
+  <script is:inline src="/site.js" defer></script>
+</body>
+</html>

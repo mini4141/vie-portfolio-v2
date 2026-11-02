@@ -9,7 +9,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 1 — Public site
 
 - [x] **T1 Foundation** — Astro (SSR, node adapter) app, SQLite via `node:sqlite`, SQL migrations, seed (6 projects + 2 sample drafts + profile + settings from the mockups), `node --test` unit tests (db, seed, scrypt, sanitiser, text).
-- [ ] **T2 Public pages** — layout + theme (light/dark, no flash), landing (intro/about/featured/skills/experience/contact), `/projects` with tag filter, `/projects/:slug` with rich story + next project, OG/meta tags, sitemap, robots, 404. Drafts never visible.
+- [x] **T2 Public pages** — layout + theme (light/dark, no flash), landing (intro/about/featured/skills/experience/contact), `/projects` with tag filter, `/projects/:slug` with rich story + next project, OG/meta tags, sitemap, robots, 404. Drafts never visible.
 
 ## Phase 2 — Owner editor
 
@@ -32,4 +32,4 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 - No ORM: plain SQL, numbered migrations in `app/migrations`.
 - Passwords: `crypto.scrypt` with per-user salt.
 - Story = sanitised HTML only (TipTap parses and emits it via custom nodes); no second JSON copy to drift.
-- Open questions from the requirements doc, defaulting for now: guests may type but never save (yes); contact form shown but demo-only until SES is wired; tags are free-form; domain via Caddy env var; experience timeline shown on landing.
+- Open questions from the requirements doc, defaulting for now: guests may type but never save (yes); contact form omitted until SES is wired (email, links and CV shown); tags are free-form; domain via Caddy env var; experience timeline shown on landing.

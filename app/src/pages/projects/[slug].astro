@@ -1,0 +1,13 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectView from '../../components/ProjectView.astro';
+import { getPublished, nextPublished, mediaUrl } from '../../lib/queries.ts';
+
+const { slug } = Astro.params;
+const project = slug ? getPublished(slug) : null;
+if (!project) return Astro.rewrite('/404');
+const next = nextPublished(project.slug);
+---
+<Base title={project.title} description={project.summary} image={mediaUrl(project.cover_file)} prompt={`~/projects/${project.slug}`} nav="work">
+  <main id="main" class="col"><ProjectView project={project} next={next} /></main>
+</Base>

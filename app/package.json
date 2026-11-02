@@ -10,7 +10,8 @@
     "start": "node dist/server/entry.mjs",
     "seed": "node scripts/seed.ts",
     "check": "astro check",
-    "test": "node --test --test-concurrency=1 \"tests/**/*.test.ts\""
+    "test": "npm run build && node --test --test-concurrency=1 \"tests/**/*.test.ts\"",
+    "test:unit": "node --test \"tests/foundation.test.ts\""
   },
   "dependencies": {
     "@astrojs/node": "^11.1.9",
