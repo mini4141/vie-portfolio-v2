@@ -1,0 +1,62 @@
+---
+import AdminShell from '../../layouts/AdminShell.astro';
+import Icon from '../../components/Icon.astro';
+import { getSettings, mediaUrl } from '../../lib/queries.ts';
+
+const guest = Astro.locals.auth.role !== 'owner';
+const s = getSettings();
+const lock = guest ? { 'data-locked': '' } : {};
+const data = JSON.stringify({ guest, share_id: s.share_media_id, theme: s.default_theme }).replace(/</g, '\\u003c');
+const SWATCHES = ['#12805C', '#2F6FED', '#B4512E', '#7A4FD6', '#C0392B', '#1F2937'];
+---
+<AdminShell title="Settings" current="settings">
+  <script type="application/json" id="st-data" set:html={data} />
+  <header class="ed-head">
+    <div>
+      <h1>Settings</h1>
+      <p>Site-wide details, sharing and look.</p>
+    </div>
+    <div class="actions">
+      <span class="autosave" data-autosave role="status" aria-live="polite"><span class="adot"></span><span data-autosave-text>{guest ? 'Saving is off in guest mode' : 'All changes saved'}</span></span>
+      <button class="btn btn-primary" type="button" data-save {...lock}>{guest && <Icon class="lock" name="lock" />} Save changes</button>
+    </div>
+  </header>
+
+  <div class="pf-grid">
+    <section class="card" aria-labelledby="st-site">
+      <h2 id="st-site">Site</h2>
+      <div class="field"><label for="st-title">Site title</label><input class="input" id="st-title" data-f="site_title" maxlength="80" value={s.site_title}></div>
+      <div class="field"><label for="st-desc">Description <span class="hint">(search results and link previews)</span></label><textarea class="input" id="st-desc" data-f="description" rows="3" maxlength="300">{s.description}</textarea></div>
+    </section>
+
+    <section class="card" aria-labelledby="st-share">
+      <h2 id="st-share">Share picture</h2>
+      <p class="muted small">Shown when the site is shared on LinkedIn, WhatsApp or X.</p>
+      <img class="side-cover" data-share src={s.share_file ? mediaUrl(s.share_file) : ''} alt="" hidden={!s.share_file}>
+      <div class="actions"><button class="btn btn-sm" type="button" data-pick="share" {...lock}>{guest && <Icon class="lock" name="lock" />} Choose picture</button><button class="btn btn-sm btn-ghost" type="button" data-clear="share" hidden={!s.share_file} {...lock}>Remove</button></div>
+    </section>
+
+    <section class="card" aria-labelledby="st-look">
+      <h2 id="st-look">Look</h2>
+      <div class="field"><span class="flabel" id="st-accent-l">Accent colour</span>
+        <div class="swatches" role="group" aria-labelledby="st-accent-l">
+          {SWATCHES.map((c) => <button type="button" class="swatch" data-swatch={c} style={`background:${c}`} aria-label={`Use ${c}`}></button>)}
+          <input class="input" data-f="accent" id="st-accent" type="color" value={s.accent} aria-label="Custom accent colour" style="width:3rem;padding:.15rem;height:2.2rem">
+        </div>
+      </div>
+      <div class="field"><span class="flabel" id="st-theme-l">Default colour mode</span>
+        <div class="seg" role="group" aria-labelledby="st-theme-l">
+          {(['system', 'light', 'dark'] as const).map((t) => <button type="button" data-theme-opt={t} aria-pressed={String(s.default_theme === t)}>{t === 'system' ? 'Match device' : t[0]!.toUpperCase() + t.slice(1)}</button>)}
+        </div>
+        <span class="hint">Visitors can still switch for themselves.</span>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="st-guest">
+      <h2 id="st-guest">Guest mode</h2>
+      <label class="switch"><span><strong style="font-size:.9rem">Let people try the editor as a guest</strong><br><span class="hint" style="font-size:.8rem;color:var(--muted)">Guests can look around for an hour but can’t change or save anything. Your real drafts and email stay hidden.</span></span><input type="checkbox" data-guest checked={s.guest_enabled}></label>
+    </section>
+  </div>
+
+  <script>import '../../editor/settings-page.ts';</script>
+</AdminShell>

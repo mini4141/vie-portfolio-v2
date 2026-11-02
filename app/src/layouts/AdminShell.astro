@@ -3,7 +3,7 @@ import AdminBase from './AdminBase.astro';
 import Icon from '../components/Icon.astro';
 import { getProfile } from '../lib/queries.ts';
 
-interface Props { title: string; current?: 'home' | 'projects' | 'media' | '' }
+interface Props { title: string; current?: 'home' | 'projects' | 'profile' | 'media' | 'settings' | '' }
 const { title, current = '' } = Astro.props;
 const { auth } = Astro.locals;
 const guest = auth.role === 'guest';
@@ -11,9 +11,9 @@ const p = getProfile();
 const nav = [
   { href: '/admin', icon: 'home', label: 'Home', key: 'home' },
   { href: '/admin#projects', icon: 'folder', label: 'Projects', key: 'projects' },
-  { href: '#', icon: 'user', label: 'Profile', soon: true },
+  { href: '/admin/profile', icon: 'user', label: 'Profile', key: 'profile' },
   { href: '/admin/media', icon: 'image', label: 'Pictures & files', key: 'media' },
-  { href: '#', icon: 'gear', label: 'Settings', soon: true },
+  { href: '/admin/settings', icon: 'gear', label: 'Settings', key: 'settings' },
 ] as const;
 ---
 <AdminBase title={title}>

@@ -46,3 +46,18 @@ dialog.picker{max-width:720px;width:calc(100% - 32px);max-height:88vh;overflow:a
 .pick[aria-selected=true]{border-color:var(--accent);background:var(--accent-soft)}
 .picker-foot{display:grid;gap:.8rem}
 dialog.picker .err{margin:0}
+
+/* profile + settings screens */
+.pf-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;max-width:1100px}
+.pf-grid .card{display:grid;gap:1rem}
+.pf-grid .card h2{margin:0}
+.pf-wide{grid-column:1/-1}
+.rows{display:grid;gap:.8rem}
+.list-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr)) auto;gap:.6rem;align-items:end;padding:.8rem;border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--bg)}
+.row-actions{display:flex;gap:.2rem}
+.sec-order{list-style:none;margin:0;padding:0;display:grid;gap:.5rem}
+.sec-row{grid-template-columns:1fr auto;align-items:center}
+.swatches{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.swatch{width:2rem;height:2rem;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px var(--line);cursor:pointer}
+.swatch:hover{box-shadow:0 0 0 2px var(--fg)}
+@media (max-width:860px){.pf-grid{grid-template-columns:1fr}.list-row{grid-template-columns:1fr}}

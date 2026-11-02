@@ -1,0 +1,87 @@
+---
+import AdminShell from '../../layouts/AdminShell.astro';
+import Icon from '../../components/Icon.astro';
+import { getProfile, mediaUrl } from '../../lib/queries.ts';
+
+const guest = Astro.locals.auth.role !== 'owner';
+const p = getProfile();
+const lock = guest ? { 'data-locked': '' } : {};
+const data = JSON.stringify({
+  guest, photo_id: p.photo_media_id, photo: p.photo_file ? mediaUrl(p.photo_file) : '', photo_alt: p.photo_alt,
+  cv_id: p.cv_media_id, cv: p.cv_file ?? '', skills: p.skills, experience: p.experience, links: p.links, sections: p.sections,
+}).replace(/</g, '\\u003c');
+const LABEL: Record<string, string> = { about: 'About', featured: 'Featured projects', skills: 'Skills', experience: 'Experience', contact: 'Contact' };
+---
+<AdminShell title="Profile" current="profile">
+  <script type="application/json" id="pf-data" set:html={data} />
+  <header class="ed-head">
+    <div>
+      <h1>Profile</h1>
+      <p>What visitors read about you on the landing page.</p>
+    </div>
+    <div class="actions">
+      <span class="autosave" data-autosave role="status" aria-live="polite"><span class="adot"></span><span data-autosave-text>{guest ? 'Saving is off in guest mode' : 'All changes saved'}</span></span>
+      <a class="btn" href="/" target="_blank" rel="noopener"><Icon name="out" /> View live site</a>
+      <button class="btn btn-primary" type="button" data-save {...lock}>{guest && <Icon class="lock" name="lock" />} Save changes</button>
+    </div>
+  </header>
+
+  <div class="pf-grid">
+    <section class="card" aria-labelledby="pf-basics">
+      <h2 id="pf-basics">Basics</h2>
+      <div class="field"><label for="pf-name">Name</label><input class="input" id="pf-name" data-f="name" maxlength="80" value={p.name}></div>
+      <div class="field"><label for="pf-headline">Headline</label><textarea class="input" id="pf-headline" data-f="headline" rows="2" maxlength="200" style="min-height:0">{p.headline}</textarea></div>
+      <div class="field"><label for="pf-status">Status line <span class="hint">(the small line with the green dot)</span></label><input class="input" id="pf-status" data-f="status_line" maxlength="120" value={p.status_line}></div>
+      <div class="two">
+        <div class="field"><label for="pf-loc">Based in</label><input class="input" id="pf-loc" data-f="location" maxlength="80" value={p.location}></div>
+        <div class="field"><label for="pf-mail">Contact email</label><input class="input" id="pf-mail" type="email" data-f="email" maxlength="120" value={p.email}></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="pf-photo">
+      <h2 id="pf-photo">Photo and CV</h2>
+      <div class="cover-pick">
+        <img data-photo src={p.photo_file ? mediaUrl(p.photo_file) : ''} alt={p.photo_alt} hidden={!p.photo_file}>
+        <div class="stack" style="display:grid;gap:.6rem">
+          <p class="muted small" data-no-photo hidden={!!p.photo_file}>No photo yet.</p>
+          <div class="actions"><button class="btn btn-sm" type="button" data-pick="photo" {...lock}>{guest && <Icon class="lock" name="lock" />} Choose photo</button><button class="btn btn-sm btn-ghost" type="button" data-clear="photo" hidden={!p.photo_file} {...lock}>Remove</button></div>
+        </div>
+      </div>
+      <div class="field"><span class="flabel">CV (PDF)</span>
+        <p class="muted small" data-cv-name>{p.cv_file ?? 'No CV yet.'}</p>
+        <div class="actions"><button class="btn btn-sm" type="button" data-pick="cv" {...lock}>{guest && <Icon class="lock" name="lock" />} Choose CV</button><button class="btn btn-sm btn-ghost" type="button" data-clear="cv" hidden={!p.cv_file} {...lock}>Remove</button></div>
+      </div>
+    </section>
+
+    <section class="card pf-wide" aria-labelledby="pf-about">
+      <h2 id="pf-about">About</h2>
+      <div class="field"><label for="pf-about-t" class="sr-only">About you</label><textarea class="input" id="pf-about-t" data-f="about" rows="7" maxlength="3000">{p.about}</textarea><span class="hint">Separate paragraphs with a blank line.</span></div>
+    </section>
+
+    <section class="card pf-wide" aria-labelledby="pf-skills">
+      <h2 id="pf-skills">Skills</h2>
+      <div class="rows" data-list="skills"></div>
+      <div class="actions"><button class="btn btn-sm" type="button" data-add="skills">+ Add a group</button></div>
+    </section>
+
+    <section class="card pf-wide" aria-labelledby="pf-exp">
+      <h2 id="pf-exp">Experience</h2>
+      <div class="rows" data-list="experience"></div>
+      <div class="actions"><button class="btn btn-sm" type="button" data-add="experience">+ Add a role</button></div>
+    </section>
+
+    <section class="card pf-wide" aria-labelledby="pf-links">
+      <h2 id="pf-links">Links</h2>
+      <div class="rows" data-list="links"></div>
+      <div class="actions"><button class="btn btn-sm" type="button" data-add="links">+ Add a link</button></div>
+    </section>
+
+    <section class="card pf-wide" aria-labelledby="pf-sec">
+      <h2 id="pf-sec">Landing page sections</h2>
+      <p class="muted small">Choose what shows and in which order.</p>
+      <ol class="sec-order" data-list="sections" data-labels={JSON.stringify(LABEL)}></ol>
+    </section>
+  </div>
+
+  <script>import '../../editor/profile-page.ts';</script>
+</AdminShell>

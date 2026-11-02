@@ -61,14 +61,16 @@ T5 notes: editor round-trips every seeded story (tested with happy-dom); blank p
 
 T6 done and committed (67 tests). Server: `src/lib/media.ts` (sniff, `saveUpload`, `setAlt`, `usage`, `deleteMedia`), `pages/api/media/index.ts` + `[id].ts`. Client: `src/editor/media-client.ts` (`pickMedia({multiple, kind, selected})` dialog, `uploadMany`, helpers) and `src/editor/media-page.ts`; screen `pages/admin/media.astro`. The picker is ready for T7 (photo, CV, share picture): call `pickMedia({kind:'image'|'file'})` and PATCH the id.
 
-## Next up: T7 profile + settings
+T7 done and committed (76 tests). `src/lib/site.ts` validates profile/settings patches; screens are `pages/admin/profile.astro` + `settings.astro` with client code in `src/editor/{profile-page,settings-page,form-save}.ts` (`makeSaver` = shared autosave/Save/Ctrl+S). Accent contrast is not validated (any #rrggbb allowed).
 
-Profile editor (name, headline, photo, about, skills, experience, links, CV, section order/visibility) and site settings (title, description, share picture, accent, default theme, guest on/off), with `PATCH /api/profile` and `/api/settings`, guest-safe reads, and admin screens replacing the two `data-soon` nav items. Then T5b, T8, T9, T10.
+## Next up: T8 guest polish
+
+Guest session is already 1 h and server-enforced read-only (middleware), settings toggle works, sample drafts only. Remaining: guest banner in `AdminShell`'s `banner` slot (mockup `.ed-banner`: view-only message, countdown timer from session expiry, Leave guest mode), welcome `<dialog>` on first guest visit, check every guest-facing screen for copy/locks, expiry UX (session ends mid-edit -> friendly redirect), then a guest regression sweep across all pages. Then T5b, T9, T10.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T7 → T5b → T8 → T9 → T10.
+Suggested order: T8 → T5b → T9 → T10.
 
-T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
+T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 
 Known follow-ups: add `lastmod`/`ETag` caching for `/media`; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.
