@@ -19,7 +19,8 @@ export const GET: APIRoute = async ({ params }) => {
       headers: {
         'Content-Type': type,
         'Content-Length': String(body.length),
-        'Cache-Control': 'public, max-age=86400',
+        // uploads carry a content hash in the name, so they can never change; seed files keep the short cache
+        'Cache-Control': /^[0-9a-f]{12}-/.test(name) ? 'public, max-age=31536000, immutable' : 'public, max-age=86400',
         'X-Content-Type-Options': 'nosniff',
       },
     });

@@ -49,3 +49,14 @@ test('verbatim media blocks lose scripts and inline handlers', () => {
   assert.ok(!/onerror|script/i.test(out), out);
   assert.match(out, /src="\/media\/a\.jpg"/);
 });
+
+test('picture and gallery blocks built by the picker survive the editor and escape their text', async () => {
+  const { imageHtml, galleryHtml } = await import('../src/editor/blocks.ts');
+  const pic = { url: '/media/abc123abc123-a.webp', alt: 'A "quoted" <b>alt</b>', original_name: 'a.png' };
+  const html = imageHtml(pic) + galleryHtml([pic, { ...pic, alt: '' }]);
+  assert.doesNotMatch(html, /<b>alt/, 'alt is escaped');
+  const out = roundTrip(html);
+  assert.equal((out.match(/<figure/g) ?? []).length, 3);
+  assert.match(out, /class="shots"/);
+  assert.match(out, /<img src="\/media\/abc123abc123-a\.webp" alt="A &quot;quoted&quot; &lt;b&gt;alt&lt;\/b&gt;" ?\/?>/);
+});

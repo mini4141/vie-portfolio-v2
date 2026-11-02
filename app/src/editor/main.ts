@@ -2,9 +2,10 @@ import { Editor } from '@tiptap/core';
 import { Placeholder } from '@tiptap/extensions';
 import { storyExtensions, toStoryHtml } from './extensions.ts';
 import { buildPreview } from './preview.ts';
-import { INSERTS, filterInserts, type InsertItem } from './blocks.ts';
+import { INSERTS, filterInserts, imageHtml, galleryHtml, type InsertItem } from './blocks.ts';
+import { pickMedia } from './media-client.ts';
 
-interface Data { id: number; role: string; slug: string; status: string; title: string; summary: string; story_html: string; tags: string[]; cover: string; cover_alt: string }
+interface Data { id: number; role: string; slug: string; status: string; title: string; summary: string; story_html: string; tags: string[]; cover_id: number | null; cover: string; cover_alt: string }
 
 const $ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => root.querySelector<T>(sel);
 const $$ = <T extends HTMLElement>(sel: string, root: ParentNode = document) => Array.from(root.querySelectorAll<T>(sel));
@@ -84,6 +85,7 @@ function payload() {
     kind: v('kind'), role: v('role'), stack: v('stack'), live_url: v('live_url'), src_url: v('src_url'),
     started: v('started'), finished: v('finished'),
     featured: featuredEl.checked,
+    cover_media_id: data.cover_id,
   };
 }
 
@@ -203,8 +205,15 @@ function closePop() { pop.hidden = true; popMode = 'none'; slashFrom = -1; }
 function pick(it: InsertItem) {
   const c = editor.chain().focus();
   if (popMode === 'slash' && slashFrom >= 0) c.deleteRange({ from: slashFrom, to: editor.state.selection.from });
-  it.run(c, editor).run();
   closePop();
+  if (it.pick) { c.run(); void insertPictures(it.pick); return; }
+  it.run(c, editor).run();
+}
+async function insertPictures(kind: 'image' | 'gallery') {
+  const got = await pickMedia({ kind: 'image', multiple: kind === 'gallery', title: kind === 'gallery' ? 'Choose pictures for the gallery' : 'Choose a picture' });
+  editor.commands.focus();
+  if (!got?.length) return;
+  editor.chain().focus().insertContent(kind === 'gallery' ? galleryHtml(got) : imageHtml(got[0]!)).run();
 }
 function slashKey(e: KeyboardEvent): boolean {
   if (popMode === 'none') return false;
@@ -225,7 +234,10 @@ function updateMenus() {
     slashFrom = $from.pos - text.length;
     const items = filterInserts(text.slice(1));
     if (popMode !== 'slash') openPop('slash', items, rect.left, rect.bottom + 6);
-    else { popItems = items; popIdx = Math.min(popIdx, Math.max(0, items.length - 1)); renderPop(); }
+    else {
+      popItems = items; popIdx = Math.min(popIdx, Math.max(0, items.length - 1)); renderPop();
+      pop.style.top = `${rect.bottom + 6}px`; // the page may have scrolled since the menu opened
+    }
   } else if (popMode === 'slash') closePop();
   // bubble toolbar
   const sel = editor.state.selection;
@@ -314,6 +326,21 @@ $$('[data-preview-size]').forEach((b) => b.addEventListener('click', () => {
 }));
 addEventListener('resize', () => { if (mode !== 'edit') fitFrame(); });
 new MutationObserver(() => { if (mode !== 'edit') renderPreview(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* ---------- cover ---------- */
+const coverImg = $<HTMLImageElement>('[data-cover]')!, noCover = $('[data-no-cover]')!, coverClear = $('[data-cover-clear]')!;
+function showCover(id: number | null, url = '', alt = '') {
+  data.cover_id = id; data.cover = url; data.cover_alt = alt;
+  coverImg.hidden = !url; noCover.hidden = !!url; coverClear.hidden = !url;
+  if (url) { coverImg.src = url; coverImg.alt = alt; }
+  changed();
+}
+$('[data-cover-pick]')!.addEventListener('click', async () => {
+  if (guest) return;
+  const got = await pickMedia({ kind: 'image', title: 'Choose a cover picture', selected: data.cover_id ?? undefined });
+  if (got?.[0]) showCover(got[0].id, got[0].url, got[0].alt);
+});
+coverClear.addEventListener('click', () => { if (!guest) showCover(null); });
 
 /* ---------- header actions ---------- */
 async function call(method: string, url: string, body?: unknown) {

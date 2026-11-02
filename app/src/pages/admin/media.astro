@@ -1,0 +1,64 @@
+---
+import AdminShell from '../../layouts/AdminShell.astro';
+import Icon from '../../components/Icon.astro';
+import { listMedia, usage } from '../../lib/media.ts';
+
+const guest = Astro.locals.auth.role !== 'owner';
+const items = listMedia().map((m) => ({ ...m, used: usage(m) }));
+const kb = (n: number) => (n > 1_000_000 ? `${(n / 1_000_000).toFixed(1)} MB` : `${Math.max(1, Math.round(n / 1000))} KB`);
+const lock = guest ? { 'data-locked': '' } : {};
+---
+<AdminShell title="Pictures & files" current="media">
+  <header class="ed-head">
+    <div>
+      <h1>Pictures &amp; files</h1>
+      <p>Everything you have uploaded. Pictures are shrunk automatically so pages stay fast.</p>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" type="button" data-upload {...lock}>{guest && <Icon class="lock" name="lock" />} Upload</button>
+      <input type="file" hidden multiple accept="image/*,application/pdf" data-file>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <div class="seg" role="group" aria-label="Show">
+      <button type="button" aria-pressed="true" data-kind="all">All <span class="muted">{items.length}</span></button>
+      <button type="button" aria-pressed="false" data-kind="image">Pictures</button>
+      <button type="button" aria-pressed="false" data-kind="file">Files</button>
+    </div>
+    <span class="muted small" data-count></span>
+  </div>
+
+  <div class="dropzone" data-drop hidden={guest}>Drop pictures or PDFs here to upload</div>
+
+  <ul class="media-grid" data-grid>
+    {items.map((m) => (
+      <li class="card media-card" data-id={m.id} data-kind={m.kind} data-name={m.original_name} data-url={m.url} data-used={m.used.length}>
+        <a class="media-thumb" href={m.url} target="_blank" rel="noopener">
+          {m.kind === 'image' ? <img src={m.url} alt={m.alt} loading="lazy" width={m.width ?? undefined} height={m.height ?? undefined} /> : <span class="pick-file">PDF</span>}
+        </a>
+        <div class="media-meta">
+          <strong class="media-name" title={m.original_name}>{m.original_name}</strong>
+          <span class="muted small">{kb(m.bytes)}{m.width ? ` · ${m.width}×${m.height}` : ''}</span>
+          <span class="muted small" data-used-text>{m.used.length ? `Used in ${m.used.join(', ')}` : 'Not used anywhere'}</span>
+        </div>
+        {m.kind === 'image' && (
+          <div class="field"><label for={`alt-${m.id}`}>Description <span class="hint">(for screen readers)</span></label><input class="input" id={`alt-${m.id}`} data-alt value={m.alt} maxlength="300" placeholder="Describe the picture"></div>
+        )}
+        <div class="actions">
+          <button class="btn btn-sm" type="button" data-copy>Copy link</button>
+          <button class="btn btn-sm btn-ghost btn-danger" type="button" data-del {...lock}>{guest && <Icon class="lock" name="lock" />}<Icon name="trash" /> Delete</button>
+        </div>
+      </li>
+    ))}
+  </ul>
+  <p class="empty" data-empty>Nothing here yet.</p>
+
+  <dialog class="welcome" id="del-dlg" aria-labelledby="del-h">
+    <h2 id="del-h">Delete this file?</h2>
+    <p id="del-msg">This can’t be undone.</p>
+    <div class="actions"><button class="btn btn-danger" id="del-yes" type="button">Yes, delete it</button><button class="btn" type="button" data-close autofocus>Keep it</button></div>
+  </dialog>
+
+  <script>import '../../editor/media-page.ts';</script>
+</AdminShell>

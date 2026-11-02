@@ -13,7 +13,7 @@ const published = project.status === 'published';
 const data = JSON.stringify({
   id: project.id, role: Astro.locals.auth.role, slug: project.slug, status: project.status,
   title: project.title, summary: project.summary, story_html: project.story_html, tags: project.tags,
-  cover: project.cover_file ? mediaUrl(project.cover_file) : '', cover_alt: project.cover_alt,
+  cover_id: project.cover_media_id, cover: project.cover_file ? mediaUrl(project.cover_file) : '', cover_alt: project.cover_alt,
 }).replace(/</g, '\\u003c');
 const lock = guest ? { 'data-locked': '' } : {};
 ---
@@ -95,8 +95,12 @@ const lock = guest ? { 'data-locked': '' } : {};
     <aside class="doc-side" aria-label="Page settings">
       <section class="card" aria-labelledby="s-cover">
         <h2 id="s-cover">Cover</h2>
-        {project.cover_file ? <img class="side-cover" src={mediaUrl(project.cover_file)} alt={project.cover_alt} /> : <p class="muted small">No cover picture yet.</p>}
-        <p class="muted small">Changing the cover and adding pictures to the story comes with the media library.</p>
+        <img class="side-cover" data-cover src={project.cover_file ? mediaUrl(project.cover_file) : ''} alt={project.cover_alt} hidden={!project.cover_file} />
+        <p class="muted small" data-no-cover hidden={!!project.cover_file}>No cover picture yet.</p>
+        <div class="actions">
+          <button class="btn btn-sm" type="button" data-cover-pick {...lock}>{guest && <Icon class="lock" name="lock" />} Choose picture</button>
+          <button class="btn btn-sm btn-ghost" type="button" data-cover-clear hidden={!project.cover_file} {...lock}>Remove</button>
+        </div>
       </section>
 
       <section class="card" aria-labelledby="s-det">

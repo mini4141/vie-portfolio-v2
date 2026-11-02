@@ -57,14 +57,18 @@ T5 done and committed (56 tests green). Editor code lives in `app/src/editor/`: 
 
 T5 notes: editor round-trips every seeded story (tested with happy-dom); blank paragraphs are dropped on save. Cover picking and inserting images/galleries/videos are deferred to T6/T5b (see BACKLOG). Preview iframe is `sandbox="allow-same-origin"` (no scripts).
 
-## Next up: T6 media
+## Status at end of session 3 (continued)
 
-Upload (owner only), `sharp` resize/WebP, alt text, media library screen, picker for cover/gallery/photo/CV; then T5b to wire the picker into the editor.
+T6 done and committed (67 tests). Server: `src/lib/media.ts` (sniff, `saveUpload`, `setAlt`, `usage`, `deleteMedia`), `pages/api/media/index.ts` + `[id].ts`. Client: `src/editor/media-client.ts` (`pickMedia({multiple, kind, selected})` dialog, `uploadMany`, helpers) and `src/editor/media-page.ts`; screen `pages/admin/media.astro`. The picker is ready for T7 (photo, CV, share picture): call `pickMedia({kind:'image'|'file'})` and PATCH the id.
+
+## Next up: T7 profile + settings
+
+Profile editor (name, headline, photo, about, skills, experience, links, CV, section order/visibility) and site settings (title, description, share picture, accent, default theme, guest on/off), with `PATCH /api/profile` and `/api/settings`, guest-safe reads, and admin screens replacing the two `data-soon` nav items. Then T5b, T8, T9, T10.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T6 → T5b → T7 → T8 → T9 → T10.
+Suggested order: T7 → T5b → T8 → T9 → T10.
 
-T6 media (sharp), T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
+T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 
-Known follow-ups: add `lastmod`/`ETag` caching for `/media`; hash filenames for uploads (T6) then switch to `immutable` cache; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.
+Known follow-ups: add `lastmod`/`ETag` caching for `/media`; Astro prints "Enabling sessions with filesystem storage" at build — harmless (we use our own sessions) but can be silenced by configuring the adapter session driver.
