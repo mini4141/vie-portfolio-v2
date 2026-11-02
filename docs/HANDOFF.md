@@ -36,30 +36,28 @@ We develop on Windows but deploy to Linux. Rules: exact-case filenames and impor
 
 ## Gotchas learned
 
+- `.badge{display:inline-flex}` beats the `hidden` attribute; `app.css` has a global `[hidden]{display:none!important}` (tested). Rebuilt CSS gets a new hashed filename: hard-reload the browser pane after `npm run build`.
+
 - Test DB edits from a second process: backdate timestamps by a minute, not 1 ms (cross-process clock skew made a test flaky).
 - Astro's `Astro.url.host` is not the real Host behind a proxy; CSRF check compares `Origin` to the `Host` header / `SITE_URL` / `X-Forwarded-Host`.
 - Set `TRUST_PROXY=1` behind Caddy so lockout keys use `X-Forwarded-For`.
 - Don't `taskkill node.exe` broadly; stop the dev server by port (PowerShell `Get-NetTCPConnection -LocalPort 4321`).
 - Google Fonts are loaded from the CDN (mockup parity); self-host them in T10 for privacy/speed.
 
-## Status at end of session 1
+## Status at end of session 2
 
-Done and committed (all tests green, 38): **T1** foundation, **T2** public pages, **T3** auth, **T4a** projects API.
-Working tree clean at commit `T4a`. Run `cd app && npm test` first to confirm the baseline.
+Done and committed (all tests green, 46): **T1** foundation, **T2** public pages, **T3** auth, **T4a** projects API, **T4b** admin shell + dashboard.
+Run `cd app && npm test` first to confirm the baseline.
 
-## Next up: T4b admin shell + UI (start here)
+T4b notes: the shell is `layouts/AdminShell.astro` (`current` prop marks the nav item; named slot `banner` is where T8's guest banner goes, and the welcome `<dialog>` can live in the page). Client behaviour is plain JS in `public/admin.js` (sign-out, `data-locked` toasts, list search/filter/feature/duplicate/delete/reorder, which only run for `main[data-role=owner]`). Project list lives on the dashboard (`/admin#projects`) as in the mockup; search and status filter are client-side over the rendered rows. `/admin/projects/[id].astro` is a stub (404 for ids a guest may not see) for T5 to replace.
 
-Port `../../chosen-5-plaintext/dashboard.html` (sidebar `.ed-side`, header, `.stats`, `.dash-grid`, `.table` project list — all CSS already in `app/src/styles/site.css`).
+## Next up: T9a (10 min) then T5 story editor
 
-1. `layouts/AdminShell.astro` wrapping `AdminBase`: sidebar (Home, Projects, Profile, Pictures & files, Settings; unbuilt ones link to `#` with `data-soon` → toast), "View live site", theme toggle, user chip (role-aware: owner shows email, guest shows "Guest / View-only visit").
-   - Guest banner (`.ed-banner`, "Guest mode — view only" + timer from `locals.auth.expiresAt` + "Leave guest mode" → `POST /api/auth/logout`) and the one-time welcome `<dialog>` belong to **T8** but the shell should render a slot for them now. Locked buttons use `data-locked` (CSS exists); in the shell, render owner-only controls with `data-locked` when `auth.role === 'guest'` and wire a client script that toasts "Saving is turned off in guest mode." (server already returns 403 regardless).
-2. `pages/admin/index.astro` = dashboard: counts from `lib/projects.ts#counts`, "Recently edited" from `recent()` (show relative times), quick actions. Replace the T3 stub (`Signed in as …`).
-3. `pages/admin/projects/index.astro` (or the section on the dashboard, as in the mockup): table from `listAdmin(role)`, search box → `GET /api/projects?q=`, status filter, featured toggle (`PATCH featured`), duplicate, delete with `confirm` dialog ("Are you sure?"), drag-to-reorder → `POST /api/projects/reorder` with ALL ids (API requires the full list), "New project" → `POST /api/projects {title}` then go to `/admin/projects/:id`.
-4. Tests: HTTP tests that `/admin` renders counts/recent for owner and guest, that a guest page contains `data-locked` on New/Delete/Duplicate and no real-draft titles; browser-check at desktop + phone width (`.ed-body` collapses <860px).
+T5: port `../../chosen-5-plaintext/editor.html` to TipTap at `/admin/projects/:id` (replace the stub; keep the guest 404 rule via `getAdmin(id, role)`), autosave via `PATCH /api/projects/:id`, Edit/Split/Preview. The shell's sidebar `.ed-side` is `position:sticky;top:40px` for the banner; with no banner it is just a 40px gap-free offset, fine.
 
 ## After that (see BACKLOG for detail)
 
-Suggested order: T4b → T9a (quick, 10 min) → T5 → T6 → T7 → T8 → T9 → T10.
+Suggested order: T9a (quick, 10 min) → T5 → T6 → T7 → T8 → T9 → T10.
 
 T5 TipTap editor at `/admin/projects/:id` (port `../../chosen-5-plaintext/editor.html` UX: slash menu, bubble toolbar, block gutter, Edit/Split/Preview, autosave via `PATCH /api/projects/:id`; live preview = render `ProjectView.astro`'s output from unsaved state in an iframe, `srcdoc` approach used in the mockup works), T6 media (sharp), T7 profile+settings, T8 guest polish, T9 devops (Dockerfile, compose, Caddy, Litestream, CI), T10 hardening (CSP, self-host fonts, a11y, README).
 

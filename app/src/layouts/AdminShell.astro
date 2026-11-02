@@ -1,0 +1,44 @@
+---
+import AdminBase from './AdminBase.astro';
+import Icon from '../components/Icon.astro';
+import { getProfile } from '../lib/queries.ts';
+
+interface Props { title: string; current?: 'home' | 'projects' | '' }
+const { title, current = '' } = Astro.props;
+const { auth } = Astro.locals;
+const guest = auth.role === 'guest';
+const p = getProfile();
+const nav = [
+  { href: '/admin', icon: 'home', label: 'Home', key: 'home' },
+  { href: '/admin#projects', icon: 'folder', label: 'Projects', key: 'projects' },
+  { href: '#', icon: 'user', label: 'Profile', soon: true },
+  { href: '#', icon: 'image', label: 'Pictures & files', soon: true },
+  { href: '#', icon: 'gear', label: 'Settings', soon: true },
+] as const;
+---
+<AdminBase title={title}>
+  <div class="ed">
+    <slot name="banner" />
+    <div class="ed-body">
+      <aside class="ed-side" aria-label="Editor">
+        <a class="ed-brand" href="/admin"><span class="mark">~/</span><span>vie/cms</span></a>
+        <nav class="ed-nav" aria-label="Sections">
+          {nav.map((n) => (
+            <a href={n.href} aria-current={'key' in n && n.key === current ? 'page' : undefined} data-soon={'soon' in n ? '' : undefined}><Icon name={n.icon} /><span>{n.label}</span></a>
+          ))}
+        </nav>
+        <div class="spacer"></div>
+        <nav class="ed-nav" aria-label="Site">
+          <a href="/" target="_blank" rel="noopener"><Icon name="out" /><span>View live site</span></a>
+          <button class="theme-btn ed-theme" type="button" data-theme-toggle aria-label="Switch colour mode"><Icon class="i-moon" name="moon" /><Icon class="i-sun" name="sun" /></button>
+          <button class="theme-btn ed-theme" type="button" id="out" aria-label={guest ? 'Leave guest mode' : 'Sign out'} style="justify-content:flex-start;gap:.7rem;padding:.55rem .7rem;font-size:.93rem;color:var(--muted)"><Icon name="out" /><span>{guest ? 'Leave guest mode' : 'Sign out'}</span></button>
+        </nav>
+        <div class="ed-user"><span class="av">{guest ? 'G' : (p.name[0] ?? 'O')}</span><div>{guest ? 'Guest' : (auth.email ?? 'Owner')}<small>{guest ? 'View-only visit' : 'Owner'}</small></div></div>
+      </aside>
+      <main class="ed-main" id="main" data-role={auth.role}>
+        <slot />
+      </main>
+    </div>
+  </div>
+  <script is:inline src="/admin.js" defer></script>
+</AdminBase>

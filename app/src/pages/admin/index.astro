@@ -1,17 +1,112 @@
 ---
-import AdminBase from '../../layouts/AdminBase.astro';
+import AdminShell from '../../layouts/AdminShell.astro';
+import Icon from '../../components/Icon.astro';
+import { counts, listAdmin, recent } from '../../lib/projects.ts';
+import { getProfile, mediaUrl } from '../../lib/queries.ts';
+import { relShort, relTime } from '../../lib/text.ts';
+
 const { auth } = Astro.locals;
+const guest = auth.role !== 'owner';
+const c = counts(auth.role);
+const projects = listAdmin(auth.role);
+const rec = recent(auth.role, 5);
+const featured = projects.filter((x) => x.featured && x.status === 'published').length;
+const lastPub = projects.filter((x) => x.published_at).sort((a, b) => b.published_at! - a.published_at!)[0];
+const who = guest ? 'guest' : (getProfile().name.split(' ')[0] || 'there');
 ---
-<AdminBase title="Home">
-  <main id="main" class="col" style="padding-top:3rem">
-    <h1>Signed in as {auth.role}</h1>
-    <p class="muted">Dashboard comes in the next ticket.</p>
-    <p><button class="btn" id="out">{auth.role === 'guest' ? 'Leave guest mode' : 'Sign out'}</button></p>
-  </main>
-</AdminBase>
-<script>
-  document.getElementById('out')?.addEventListener('click', async () => {
-    await fetch('/api/auth/logout', { method: 'POST' });
-    location.href = '/';
-  });
-</script>
+<AdminShell title="Home" current="home">
+  <header class="ed-head">
+    <div>
+      <h1>Hello, {who}</h1>
+      <p>Here's what's happening on the site.</p>
+    </div>
+    <div class="actions">
+      <a class="btn" href="/" target="_blank" rel="noopener"><Icon name="out" /> View live site</a>
+      <button class="btn btn-primary" data-new-project data-locked={guest ? '' : undefined}>{guest && <Icon class="lock" name="lock" />} New project</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Summary">
+    <div class="card stat"><span class="k">Published projects</span><span class="n">{c.published}</span><span class="s">{featured} featured on the landing page</span></div>
+    <div class="card stat"><span class="k">Drafts</span><span class="n">{c.drafts}</span><span class="s">{guest ? 'Sample drafts for guests' : 'Only you can see these'}</span></div>
+    <div class="card stat"><span class="k">Pictures &amp; files</span><span class="n">{c.media}</span><span class="s">Including your CV</span></div>
+    <div class="card stat"><span class="k">Last published</span><span class="n">{lastPub ? relShort(lastPub.published_at!) : '–'}</span><span class="s">{lastPub ? `${lastPub.title}, ${relTime(lastPub.published_at!).toLowerCase()}` : 'Nothing yet'}</span></div>
+  </section>
+
+  <div class="dash-grid">
+    <section class="card" aria-labelledby="recent-h">
+      <h2 id="recent-h">Recently edited</h2>
+      <ul class="recent">
+        {rec.map((r) => <li><span>Edited <strong>{r.title}</strong></span><time datetime={new Date(r.updated_at).toISOString()}>{relTime(r.updated_at)}</time></li>)}
+        {!rec.length && <li><span class="muted">Nothing edited yet.</span></li>}
+      </ul>
+    </section>
+    <section class="card" aria-labelledby="quick-h">
+      <h2 id="quick-h">Quick actions</h2>
+      <div class="quick">
+        <button class="btn" data-new-project data-locked={guest ? '' : undefined}>{guest ? <Icon class="lock" name="lock" /> : <Icon name="folder" />} New project</button>
+        <a class="btn" href="#projects"><Icon name="folder" /> Edit a project</a>
+        <a class="btn" href="/" target="_blank" rel="noopener"><Icon name="out" /> View live site</a>
+      </div>
+    </section>
+  </div>
+
+  <section id="projects" aria-labelledby="proj-h">
+    <div class="ed-head" style="margin-bottom:1rem">
+      <div><h1 id="proj-h" style="font-size:1.6rem">Projects</h1><p>Drag to set the order. Each project gets its own page on the site.</p></div>
+    </div>
+    <div class="toolbar">
+      <label class="search"><Icon name="search" /><span class="sr-only">Search projects</span><input class="input" type="search" placeholder="Search projects" data-search></label>
+      <div class="seg" role="group" aria-label="Filter by status">
+        <button aria-pressed="true" data-status="all">All</button>
+        <button aria-pressed="false" data-status="published">Published</button>
+        <button aria-pressed="false" data-status="draft">Drafts</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th style="width:36px"><span class="sr-only">Order</span></th><th>Project</th><th class="hide-sm hide-md">Tags</th><th>Status</th><th class="hide-sm hide-md">Updated</th><th style="text-align:right">Actions</th></tr></thead>
+        <tbody data-rows>
+          {projects.map((x) => (
+            <tr data-row={x.status} data-id={x.id} data-title={x.title} draggable={guest ? undefined : 'true'}>
+              <td><button class="handle tip-right" data-handle data-locked={guest ? '' : undefined} aria-label="Drag to reorder"><Icon name="grip" /></button></td>
+              <td><a class="row-title" href={`/admin/projects/${x.id}`}>{x.cover_file ? <img src={mediaUrl(x.cover_file)} alt="" loading="lazy" width="52" height="38" /> : <span class="ph"></span>}<span>{x.title}<small>{x.summary}</small></span></a></td>
+              <td class="hide-sm hide-md"><div class="chips">{x.tags.map((t) => <span class="chip">{t}</span>)}</div></td>
+              <td>
+                {x.status === 'published' ? <span class="badge pub">Published</span> : x.is_sample ? <span class="badge sample">Sample draft</span> : <span class="badge draft">Draft</span>}
+                {' '}<span class="badge feat" data-feat-badge hidden={!x.featured}>★ Featured</span>
+              </td>
+              <td class="hide-sm hide-md" style="color:var(--muted)">{relTime(x.updated_at)}</td>
+              <td style="text-align:right;white-space:nowrap">
+                <a class="btn btn-sm btn-ghost" href={`/admin/projects/${x.id}`}>Edit</a>
+                <button class="btn btn-sm btn-ghost tip-left" data-act="feature" aria-pressed={x.featured ? 'true' : 'false'} aria-label={x.featured ? 'Remove from featured' : 'Feature on landing page'} data-locked={guest ? '' : undefined}>{guest && <Icon class="lock" name="lock" />}<span aria-hidden="true">{x.featured ? '★' : '☆'}</span></button>
+                <button class="btn btn-sm btn-ghost tip-left" data-act="duplicate" aria-label="Duplicate" data-locked={guest ? '' : undefined}>{guest && <Icon class="lock" name="lock" />}<Icon name="copy" /></button>
+                <button class="btn btn-sm btn-ghost btn-danger tip-left" data-act="delete" aria-label="Delete" data-locked={guest ? '' : undefined}>{guest && <Icon class="lock" name="lock" />}<Icon name="trash" /></button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p class="empty" data-search-empty>No projects match that search.</p>
+    </div>
+  </section>
+
+  {!guest && (
+    <>
+      <dialog class="welcome" id="new-dlg" aria-labelledby="new-h">
+        <form method="dialog" id="new-form">
+          <h2 id="new-h">New project</h2>
+          <p>Give it a working title. You can change it later.</p>
+          <div class="field" style="margin-bottom:1rem"><label for="new-title">Title</label><input class="input" id="new-title" maxlength="120" required autocomplete="off"></div>
+          <p class="err" id="new-err" role="alert"></p>
+          <div class="actions"><button class="btn btn-primary" type="submit">Create project</button><button class="btn" type="button" data-close>Cancel</button></div>
+        </form>
+      </dialog>
+      <dialog class="welcome" id="del-dlg" aria-labelledby="del-h">
+        <h2 id="del-h">Delete this project?</h2>
+        <p id="del-msg">This can’t be undone.</p>
+        <div class="actions"><button class="btn btn-danger" id="del-yes">Yes, delete it</button><button class="btn" data-close autofocus>Keep it</button></div>
+      </dialog>
+    </>
+  )}
+</AdminShell>

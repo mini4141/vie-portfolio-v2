@@ -15,7 +15,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 - [x] **T3 Auth** — sign-in (email+password, scrypt), 7-day session cookie, sign-out, 5 wrong tries → 15 min lockout, CSRF (same-origin check), role middleware (`visitor|guest|owner`).
 - [x] **T4a Projects API** — `/api/projects` list+search (guest-filtered), create, PATCH (validated; story sanitised), publish/unpublish, duplicate, delete, reorder. 38 tests incl. guest read-only regression.
-- [ ] **T4b Admin shell + UI** — `/admin` shell (sidebar, guest banner slot, theme), dashboard (counts, recent edits, New project / View live site), projects list (status, search, duplicate/delete with confirm, featured toggle, drag reorder). Port from `chosen-5-plaintext/dashboard.html`.
+- [x] **T4b Admin shell + UI** — `AdminShell` layout (sidebar, theme, role-aware user chip, `banner` slot for T8), dashboard with counts/recent edits, projects table on the dashboard (search, status filter, featured toggle, duplicate, delete with dialog, drag reorder, New project dialog), guest controls rendered `data-locked`. `/admin/projects/:id` is a stub until T5. 46 tests.
 - [ ] **T5 Story editor** — TipTap block editor (slash menu, markdown shortcuts, tables, callouts, big number, code, image, gallery, video), server-side sanitising → stored sanitised HTML only, autosave every few seconds, Edit/Split/Preview with live preview (phone/computer).
 - [ ] **T6 Media** — upload (owner only), `sharp` resize/WebP, alt text, media library screen, picker used by cover/gallery/photo/CV.
 - [ ] **T7 Profile + settings** — profile editor (name, headline, photo, about, skills, experience, links, CV, section order/visibility), site settings (title, description, share picture, accent, default theme, guest on/off).

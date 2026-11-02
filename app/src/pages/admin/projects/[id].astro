@@ -1,0 +1,17 @@
+---
+import AdminShell from '../../../layouts/AdminShell.astro';
+import { getAdmin } from '../../../lib/projects.ts';
+
+const id = /^\d+$/.test(Astro.params.id ?? '') ? Number(Astro.params.id) : 0;
+const project = getAdmin(id, Astro.locals.auth.role);
+if (!project) return new Response('Not found', { status: 404 });
+---
+<AdminShell title={project.title} current="projects">
+  <header class="ed-head">
+    <div>
+      <p class="ed-crumb"><a href="/admin#projects">Projects</a> / {project.title}</p>
+      <h1>{project.title}</h1>
+      <p>The story editor arrives in the next ticket.</p>
+    </div>
+  </header>
+</AdminShell>

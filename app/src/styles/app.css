@@ -2,3 +2,10 @@
 .embed .play::before{content:"";border-style:solid;border-width:11px 0 11px 18px;border-color:transparent transparent transparent currentColor;margin-left:4px}
 .rt .win img{width:100%;height:auto}
 .rt .shots figure{margin:0}
+
+/* admin project list: keep rows one line tall */
+.row-title>span{min-width:11rem}
+.row-title small{max-width:38ch;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-title img{flex:none}
+@media (max-width:1180px){.table .hide-md{display:none}}
+[hidden]{display:none!important}

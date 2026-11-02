@@ -30,3 +30,30 @@ export function safeUrl(u: string): string {
 export function parseJson<T>(s: string, fallback: T): T {
   try { return JSON.parse(s) as T; } catch { return fallback; }
 }
+
+/** "12 minutes ago", "Yesterday", "3 days ago" … for admin lists. */
+export function relTime(then: number, now = Date.now()): string {
+  const s = Math.max(0, Math.round((now - then) / 1000));
+  if (s < 60) return 'Just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m} min ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h} ${h === 1 ? 'hour' : 'hours'} ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'Yesterday';
+  if (d < 14) return `${d} days ago`;
+  if (d < 60) return `${Math.floor(d / 7)} weeks ago`;
+  return `${Math.floor(d / 30)} months ago`;
+}
+
+/** Compact form for stat tiles: "now", "12m", "5h", "3d", "3w", "4mo". */
+export function relShort(then: number, now = Date.now()): string {
+  const m = Math.floor(Math.max(0, now - then) / 60_000);
+  if (m < 1) return 'now';
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 14) return `${d}d`;
+  return d < 60 ? `${Math.floor(d / 7)}w` : `${Math.floor(d / 30)}mo`;
+}
