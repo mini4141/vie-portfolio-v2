@@ -13,7 +13,7 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 
 ## Phase 2 — Owner editor
 
-- [ ] **T3 Auth** — sign-in (email+password, scrypt), 7-day session cookie, sign-out, 5 wrong tries → 15 min lockout, CSRF (same-origin check), role middleware (`visitor|guest|owner`).
+- [x] **T3 Auth** — sign-in (email+password, scrypt), 7-day session cookie, sign-out, 5 wrong tries → 15 min lockout, CSRF (same-origin check), role middleware (`visitor|guest|owner`).
 - [ ] **T4 Admin shell + projects API** — `/admin` shell, dashboard (counts, recent edits), project list + search, CRUD API (create, update, duplicate, delete, publish/unpublish, reorder, featured). Owner-only writes.
 - [ ] **T5 Story editor** — TipTap block editor (slash menu, markdown shortcuts, tables, callouts, big number, code, image, gallery, video), server-side sanitising → stored JSON + HTML, autosave every few seconds, Edit/Split/Preview with live preview (phone/computer).
 - [ ] **T6 Media** — upload (owner only), `sharp` resize/WebP, alt text, media library screen, picker used by cover/gallery/photo/CV.

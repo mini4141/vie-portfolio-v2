@@ -1,0 +1,17 @@
+---
+import AdminBase from '../../layouts/AdminBase.astro';
+const { auth } = Astro.locals;
+---
+<AdminBase title="Home">
+  <main id="main" class="col" style="padding-top:3rem">
+    <h1>Signed in as {auth.role}</h1>
+    <p class="muted">Dashboard comes in the next ticket.</p>
+    <p><button class="btn" id="out">{auth.role === 'guest' ? 'Leave guest mode' : 'Sign out'}</button></p>
+  </main>
+</AdminBase>
+<script>
+  document.getElementById('out')?.addEventListener('click', async () => {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    location.href = '/';
+  });
+</script>

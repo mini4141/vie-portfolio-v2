@@ -1,0 +1,66 @@
+---
+import AdminBase from '../../layouts/AdminBase.astro';
+import Icon from '../../components/Icon.astro';
+import { getProfile, getSettings } from '../../lib/queries.ts';
+
+const p = getProfile(), s = getSettings();
+---
+<AdminBase title="Sign in" bodyClass="ed-page signin-page">
+  <main class="signin" id="main">
+    <div class="signin-art">
+      <img class="bg" src="/media/p-cms.jpg" alt="">
+      <a class="ed-brand art-brand" href="/"><span class="mark">~/</span><span>vie/cms</span></a>
+      <p class="art-quote">The editor behind this site.<br>Guests can open every screen; nothing they do is saved.</p>
+    </div>
+    <div class="signin-form">
+      <form id="signin" novalidate>
+        <a class="back" href="/"><Icon name="out" /> Back to the site</a>
+        <h1>Sign in to the editor</h1>
+        <p class="sub">Only {p.name.split(' ')[0] || 'the owner'} can make changes here.</p>
+        <div class="field"><label for="s-email">Email</label><input class="input" id="s-email" name="email" type="email" autocomplete="username" required></div>
+        <div class="field"><label for="s-pass">Password</label><input class="input" id="s-pass" name="password" type="password" autocomplete="current-password" required></div>
+        <p class="err" id="err" role="alert"></p>
+        <button class="btn btn-primary btn-block" type="submit" id="go">Sign in</button>
+        {s.guest_enabled && (
+          <>
+            <div class="or">or</div>
+            <button class="btn btn-block" type="button" id="guest"><Icon name="out" /> Continue as guest</button>
+            <p class="hint" style="font-size:.82rem;color:var(--muted);text-align:center">Look around every screen for up to an hour. Nothing you do will be saved.</p>
+          </>
+        )}
+        <div style="display:flex;justify-content:center"><button class="theme-btn" type="button" data-theme-toggle aria-label="Switch colour mode"><Icon class="i-moon" name="moon" /><Icon class="i-sun" name="sun" /></button></div>
+      </form>
+    </div>
+  </main>
+</AdminBase>
+
+<script>
+  const form = document.getElementById('signin') as HTMLFormElement;
+  const err = document.getElementById('err')!;
+  const go = document.getElementById('go') as HTMLButtonElement;
+  const show = (m: string) => { err.textContent = m; err.classList.add('show'); };
+
+  async function post(url: string, body?: object) {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body ?? {}) });
+    return { ok: r.ok, data: await r.json().catch(() => ({})) as { message?: string } };
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    err.classList.remove('show');
+    const email = (form.elements.namedItem('email') as HTMLInputElement).value.trim();
+    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
+    if (!email || !password) return show('Enter your email and password.');
+    go.disabled = true;
+    const r = await post('/api/auth/login', { email, password });
+    if (r.ok) return void (location.href = '/admin');
+    go.disabled = false;
+    show(r.data.message ?? 'Something went wrong. Please try again.');
+  });
+
+  document.getElementById('guest')?.addEventListener('click', async () => {
+    const r = await post('/api/auth/guest');
+    if (r.ok) location.href = '/admin';
+    else show(r.data.message ?? 'Guest mode is not available right now.');
+  });
+</script>
