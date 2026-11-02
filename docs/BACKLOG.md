@@ -14,7 +14,8 @@ Status: `[ ]` todo · `[~]` in progress · `[x]` done.
 ## Phase 2 — Owner editor
 
 - [x] **T3 Auth** — sign-in (email+password, scrypt), 7-day session cookie, sign-out, 5 wrong tries → 15 min lockout, CSRF (same-origin check), role middleware (`visitor|guest|owner`).
-- [ ] **T4 Admin shell + projects API** — `/admin` shell, dashboard (counts, recent edits), project list + search, CRUD API (create, update, duplicate, delete, publish/unpublish, reorder, featured). Owner-only writes.
+- [x] **T4a Projects API** — `/api/projects` list+search (guest-filtered), create, PATCH (validated; story sanitised), publish/unpublish, duplicate, delete, reorder. 38 tests incl. guest read-only regression.
+- [ ] **T4b Admin shell + UI** — `/admin` shell (sidebar, guest banner slot, theme), dashboard (counts, recent edits, New project / View live site), projects list (status, search, duplicate/delete with confirm, featured toggle, drag reorder). Port from `chosen-5-plaintext/dashboard.html`.
 - [ ] **T5 Story editor** — TipTap block editor (slash menu, markdown shortcuts, tables, callouts, big number, code, image, gallery, video), server-side sanitising → stored JSON + HTML, autosave every few seconds, Edit/Split/Preview with live preview (phone/computer).
 - [ ] **T6 Media** — upload (owner only), `sharp` resize/WebP, alt text, media library screen, picker used by cover/gallery/photo/CV.
 - [ ] **T7 Profile + settings** — profile editor (name, headline, photo, about, skills, experience, links, CV, section order/visibility), site settings (title, description, share picture, accent, default theme, guest on/off).

@@ -64,3 +64,21 @@ export async function startServer(env: Record<string, string> = {}): Promise<Tes
     },
   };
 }
+
+let ipCounter = 100;
+/** Sign in and return a session cookie. Server must be started with TRUST_PROXY=1 so each call gets its own lockout bucket. */
+async function session(s: TestServer, path: string, body: unknown): Promise<string> {
+  const r = await s.req(path, { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json', 'x-forwarded-for': `10.1.0.${ipCounter++ % 250}` } });
+  if (r.status !== 200) throw new Error(`sign-in failed: ${r.status} ${await r.text()}`);
+  return r.headers.getSetCookie().map((c) => c.split(';')[0]!).find((c) => c.startsWith('vie_session='))!;
+}
+export const loginOwner = (s: TestServer) => session(s, '/api/auth/login', OWNER);
+export const loginGuest = (s: TestServer) => session(s, '/api/auth/guest', {});
+
+/** JSON API helper bound to a cookie. */
+export function api(s: TestServer, cookie: string) {
+  return async <T = any>(method: string, path: string, body?: unknown): Promise<{ status: number; body: T }> => {
+    const r = await s.req(path, { method, cookie, body: body === undefined ? undefined : JSON.stringify(body), headers: { 'content-type': 'application/json' } });
+    return { status: r.status, body: (await r.json().catch(() => ({}))) as T };
+  };
+}
