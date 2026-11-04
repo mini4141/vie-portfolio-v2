@@ -28,9 +28,10 @@ const guard = async (ctx: Parameters<Parameters<typeof defineMiddleware>[0]>[0],
   const guarded = pathname.startsWith('/admin') || pathname.startsWith('/api');
   if (!guarded) {
     const res = await next();
-    // Public pages never read the session, so every visitor gets the same HTML: let a CDN keep it for a few minutes.
+    // Public pages never read the session, so every visitor gets the same HTML: let a CDN keep it for a day and
+    // refresh it in the background for a week after that. Content changes rarely; purge the CDN cache after an edit.
     if (ctx.request.method === 'GET' && res.status === 200 && !res.headers.has('Cache-Control')) {
-      res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300');
+      res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
     }
     return res;
   }

@@ -89,10 +89,10 @@ test('public pages may be cached by a CDN; sign-in and the admin never are', asy
   for (const p of ['/', '/projects', '/projects/pocketwise', '/robots.txt', '/sitemap.xml']) {
     const r = await s.req(p);
     assert.equal(r.status, 200, p);
-    assert.equal(r.headers.get('cache-control'), 'public, max-age=0, s-maxage=300', p);
+    assert.equal(r.headers.get('cache-control'), 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800', p);
     assert.equal(r.headers.get('set-cookie'), null, p);
   }
-  assert.notEqual((await s.req('/nothing-here')).headers.get('cache-control'), 'public, max-age=0, s-maxage=300');
+  assert.ok(!(await s.req('/nothing-here')).headers.get('cache-control')?.includes('s-maxage'));
   assert.equal((await s.req('/admin/signin')).headers.get('cache-control'), 'no-store');
   assert.equal((await s.req('/api/projects')).headers.get('cache-control'), 'no-store');
 });
