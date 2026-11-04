@@ -21,6 +21,10 @@
 	}
 	# Self-hosted fonts never change in place, so browsers and CDNs may keep them for a month.
 	header /fonts/* >Cache-Control "public, max-age=2592000"
+	# Small scripts without a hash in their name: browsers re-check every time, but a CDN may answer for an hour
+	# (purge the CDN cache after changing one).
+	@scripts path /theme.js /site.js /admin.js
+	header @scripts >Cache-Control "public, max-age=0, s-maxage=3600"
 	reverse_proxy app:4321 {
 		# the app reads the first X-Forwarded-For entry as the visitor; send exactly one, the verified client address
 		header_up X-Forwarded-For {client_ip}
