@@ -1,0 +1,22 @@
+name: Warm CDN cache
+
+# Fills the CDN cache in several countries once a day (see devops/warm-cache.mjs). Also run it by hand
+# (Actions tab -> Warm CDN cache -> Run workflow) right after purging the cache or deploying.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  warm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Warm
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://alvieirvansyah.com' }}
+          GLOBALPING_TOKEN: ${{ secrets.GLOBALPING_TOKEN }}
+        run: node devops/warm-cache.mjs
