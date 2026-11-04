@@ -1,4 +1,16 @@
 # SITE_DOMAIN=vie.example.com gets a real certificate automatically; the default (localhost) uses Caddy's local CA.
+#
+# Cloudflare: when the DNS record is proxied (orange cloud), every request comes from a Cloudflare address and the
+# visitor's address arrives in CF-Connecting-IP. Caddy only believes that header when the connection really comes from
+# a Cloudflare range below (ranges: https://www.cloudflare.com/ips). Without Cloudflare nothing matches, so the
+# visitor's own address is used exactly as before. Refresh the list if Cloudflare changes it.
+{
+	servers {
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+		client_ip_headers CF-Connecting-IP X-Forwarded-For
+	}
+}
+
 {$SITE_DOMAIN:localhost} {
 	encode zstd gzip
 	header {
@@ -7,5 +19,10 @@
 		Referrer-Policy strict-origin-when-cross-origin
 		-Server
 	}
-	reverse_proxy app:4321
+	# Self-hosted fonts never change in place, so browsers and CDNs may keep them for a month.
+	header /fonts/* >Cache-Control "public, max-age=2592000"
+	reverse_proxy app:4321 {
+		# the app reads the first X-Forwarded-For entry as the visitor; send exactly one, the verified client address
+		header_up X-Forwarded-For {client_ip}
+	}
 }
