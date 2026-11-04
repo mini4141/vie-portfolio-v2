@@ -26,7 +26,14 @@ export const onRequest = defineMiddleware(async (ctx, next) => withSecurityHeade
 const guard = async (ctx: Parameters<Parameters<typeof defineMiddleware>[0]>[0], next: Parameters<Parameters<typeof defineMiddleware>[0]>[1]): Promise<Response> => {
   const { pathname } = ctx.url;
   const guarded = pathname.startsWith('/admin') || pathname.startsWith('/api');
-  if (!guarded) return next();
+  if (!guarded) {
+    const res = await next();
+    // Public pages never read the session, so every visitor gets the same HTML: let a CDN keep it for a few minutes.
+    if (ctx.request.method === 'GET' && res.status === 200 && !res.headers.has('Cache-Control')) {
+      res.headers.set('Cache-Control', 'public, max-age=0, s-maxage=300');
+    }
+    return res;
+  }
 
   let auth = resolveSession(ctx.cookies.get(SESSION_COOKIE)?.value);
   if (auth.role === 'guest' && !getSettings().guest_enabled) auth = VISITOR; // guest login switched off in settings
