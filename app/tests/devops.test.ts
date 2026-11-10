@@ -33,6 +33,13 @@ test('compose: /data is a named volume, proxy trusted, app not published, litest
   assert.match(c, /profiles: \["backup"\]/);
 });
 
+test('compose: uploads are copied to the bucket from a read-only mount, and only restored on request', () => {
+  const c = read('devops/docker-compose.yml');
+  assert.match(c, /uploads-backup:[\s\S]*?profiles: \["uploads-backup"\][\s\S]*?- data:\/data:ro/);
+  assert.match(c, /uploads-restore:[\s\S]*?profiles: \["restore"\]/);
+  assert.match(c, /command: copy \/data\/uploads :s3:/, 'copy, never sync: the bucket keeps files deleted in the app');
+});
+
 test('entrypoint, Caddyfile, litestream config, CI and runbook exist; scripts use LF', () => {
   for (const f of ['app/scripts/docker-entrypoint.sh', 'devops/Caddyfile', 'devops/litestream.yml', 'devops/.env.example', 'devops/RUNBOOK.md', '.github/workflows/ci.yml']) assert.ok(existsSync(resolve(root, f)), f);
   assert.doesNotMatch(read('app/scripts/docker-entrypoint.sh'), /\r/, 'LF only: CRLF breaks sh on Linux');

@@ -30,7 +30,7 @@ Two things live in the `data` volume and need different handling:
 | What | Where | How it is protected |
 |---|---|---|
 | Database (`/data/app.db`) | SQLite | **Litestream** streams it to S3 continuously. |
-| Pictures and files (`/data/uploads`) | plain files | **Not covered by Litestream.** Snapshot the volume or sync it (see below). |
+| Pictures and files (`/data/uploads`) | plain files | **Not covered by Litestream.** Copy them to the bucket with `uploads-backup` (see below). |
 
 Turn on continuous database backup: fill the `LITESTREAM_*` values in `.env` (bucket, region, key pair with access to that bucket only), then
 
@@ -39,13 +39,26 @@ docker compose --profile backup up -d
 docker compose logs litestream      # should say it is replicating /data/app.db
 ```
 
-Uploads, simplest safe option: take a provider snapshot of the server disk daily. Or a nightly copy:
+Uploads: with the same R2 bucket and keys as above, copy them to `vie/uploads/` in the bucket (rclone, read-only mount, never deletes anything in the bucket):
 
 ```bash
-docker run --rm -v vie_data:/data -v "$PWD":/out alpine tar czf /out/uploads-$(date +%F).tgz -C /data uploads
+docker compose run --rm uploads-backup
 ```
 
-Copy that file off the server (S3, another machine). Uploads are content-addressed, so restoring an older copy never breaks a newer database; at worst a picture is missing and you re-upload it.
+Run it nightly from the server's crontab (`crontab -e`):
+
+```
+15 3 * * * cd /home/<user>/vie-portfolio-v2/devops && docker compose run --rm uploads-backup >> /home/<user>/uploads-backup.log 2>&1
+```
+
+A line like `There was nothing to transfer` in the log is the normal quiet night. Uploads are content-addressed, so restoring an older copy never breaks a newer database; at worst a picture is missing and you re-upload it. A provider disk snapshot is another option; it also covers the database.
+
+Restore the pictures into a new or empty volume (after the database restore below):
+
+```bash
+docker compose run --rm uploads-restore
+docker compose run --rm --no-deps --entrypoint chown uploads-restore -R 1000:1000 /data/uploads   # the app runs as uid 1000
+```
 
 ## Restore the database
 
