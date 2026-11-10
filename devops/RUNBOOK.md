@@ -48,8 +48,11 @@ docker compose run --rm uploads-backup
 Run it nightly from the server's crontab (`crontab -e`):
 
 ```
-15 3 * * * cd /home/<user>/vie-portfolio-v2/devops && docker compose run --rm uploads-backup >> /home/<user>/uploads-backup.log 2>&1
+15 3 * * * cd /home/<user>/vie-portfolio-v2/devops && docker compose run --rm -T uploads-backup >> /home/<user>/uploads-backup.log 2>&1
 ```
+
+`-T` is needed because cron has no terminal. Once a day is enough: uploads change only when you add or replace a picture, and the database is already replicated every second by Litestream. Dry run exactly as cron would run it:
+`env -i HOME=$HOME PATH=/usr/bin:/bin sh -c 'cd ~/vie-portfolio-v2/devops && docker compose run --rm -T uploads-backup'`
 
 A line like `There was nothing to transfer` in the log is the normal quiet night. Uploads are content-addressed, so restoring an older copy never breaks a newer database; at worst a picture is missing and you re-upload it. A provider disk snapshot is another option; it also covers the database.
 
