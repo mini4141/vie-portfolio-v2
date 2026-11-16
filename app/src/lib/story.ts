@@ -7,7 +7,7 @@ import { esc, safeUrl } from './text.ts';
  *   {"h2": "Title"}  {"h3": "…"}  {"p": "text with **bold**, *italic*, `code`, [link](https://x.dev)"}
  *   {"ul": ["a", "b"]}  {"ol": ["a", "b"]}  {"quote": "…"}  {"stat": "40%", "text": "fewer drop-offs"}
  *   {"callout": "…" | ["…", "…"], "kind": "note" | "tip" | "warn"}  {"code": "…", "lang": "ts"}
- *   {"image": "file.jpg", "alt": "…", "caption": "…", "narrow": true}  {"gallery": ["a.jpg", {"image": "b.jpg", "alt": "…"}]}
+ *   {"image": "file.jpg", "alt": "…", "caption": "…", "narrow": true}  {"gallery": ["a.jpg", {"image": "b.jpg", "alt": "…", "caption": "…"}]}
  *   {"table": {"head": ["A", "B"], "rows": [["1", "2"]]}}  {"rule": true}  {"html": "<p>escape hatch</p>"}
  */
 export class StoryError extends Error {}
@@ -62,9 +62,9 @@ const list = (v: unknown, at: string): string[] => {
   return v.map((x, i) => text(x, `${at}[${i}]`));
 };
 
-function imageRef(v: unknown, at: string): { ref: string; alt: string } {
-  if (typeof v === 'string') return { ref: text(v, at, 300), alt: '' };
-  if (isObj(v) && typeof v.image === 'string') return { ref: text(v.image, at, 300), alt: typeof v.alt === 'string' ? v.alt : '' };
+function imageRef(v: unknown, at: string): { ref: string; alt: string; caption: string } {
+  if (typeof v === 'string') return { ref: text(v, at, 300), alt: '', caption: '' };
+  if (isObj(v) && typeof v.image === 'string') return { ref: text(v.image, at, 300), alt: typeof v.alt === 'string' ? v.alt : '', caption: typeof v.caption === 'string' ? v.caption : '' };
   throw new StoryError(`${at} must be a file name or {"image": "file.jpg", "alt": "…"}.`);
 }
 
@@ -75,7 +75,7 @@ export function collectImages(blocks: unknown): { ref: string; alt: string }[] {
   blocks.forEach((b, i) => {
     if (!isObj(b)) return;
     if (typeof b.image === 'string') out.push({ ref: b.image, alt: typeof b.alt === 'string' ? b.alt : typeof b.caption === 'string' ? b.caption : '' });
-    if (Array.isArray(b.gallery)) b.gallery.forEach((g, j) => { try { out.push(imageRef(g, `story[${i}].gallery[${j}]`)); } catch { /* reported when the HTML is built */ } });
+    if (Array.isArray(b.gallery)) b.gallery.forEach((g, j) => { try { { const r = imageRef(g, `story[${i}].gallery[${j}]`); out.push({ ref: r.ref, alt: r.alt || r.caption }); } } catch { /* reported when the HTML is built */ } });
   });
   return out;
 }
@@ -119,7 +119,7 @@ export function blocksToHtml(blocks: unknown, images: ReadonlyMap<string, Img>):
       case 'gallery': {
         const g = b.gallery;
         if (!Array.isArray(g) || !g.length || g.length > 12) throw new StoryError(`${at}.gallery needs 1 to 12 pictures.`);
-        return `<div class="shots">${g.map((x, j) => { const r = imageRef(x, `${at}.gallery[${j}]`); return figure(r.ref, r.alt.trim(), '', '', `${at}.gallery[${j}]`); }).join('')}</div>`;
+        return `<div class="shots">${g.map((x, j) => { const r = imageRef(x, `${at}.gallery[${j}]`); return figure(r.ref, r.alt.trim(), r.caption.trim(), '', `${at}.gallery[${j}]`); }).join('')}</div>`;
       }
       case 'table': {
         const t = b.table;

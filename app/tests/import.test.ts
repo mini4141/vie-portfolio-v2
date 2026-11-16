@@ -56,6 +56,14 @@ test('blocks become the markup the editor makes', () => {
   assert.deepEqual(collectImages([{ image: 'a.jpg' }, { gallery: ['b.jpg', { image: 'c.jpg' }] }, { p: 'x' }]).map((i) => i.ref), ['a.jpg', 'b.jpg', 'c.jpg']);
 });
 
+test('gallery pictures can carry a caption too', () => {
+  const imgs = new Map([['a.jpg', { url: '/media/x-a.webp', name: 'a.jpg' }]]);
+  const r = blocksToHtml([{ gallery: [{ image: 'a.jpg', alt: 'alt text', caption: 'A *caption*' }] }], imgs);
+  assert.ok(r.html.includes('alt="alt text"') && r.html.includes('<figcaption>A <em>caption</em></figcaption>'));
+  assert.equal(r.warnings.length, 0);
+  assert.equal(collectImages([{ gallery: [{ image: 'a.jpg', caption: 'only a caption' }] }])[0]!.alt, 'only a caption');
+});
+
 test('bad blocks say where and why', () => {
   const imgs = new Map();
   const msg = (b: unknown) => { try { blocksToHtml(b, imgs); } catch (e) { assert.ok(e instanceof StoryError); return (e as Error).message; } return ''; };

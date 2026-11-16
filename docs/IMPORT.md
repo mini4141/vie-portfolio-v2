@@ -88,7 +88,7 @@ Each block has exactly one main key. Text accepts a little Markdown: `**bold**`,
 | callout | `{"callout": "Open source.", "kind": "tip"}` (`note`, `tip`, `warn`; a list of strings makes several paragraphs) |
 | code | `{"code": "const x = 1", "lang": "ts"}` |
 | picture | `{"image": "images/a.jpg", "alt": "what it shows", "caption": "optional", "narrow": true}` |
-| gallery | `{"gallery": ["images/a.jpg", {"image": "images/b.jpg", "alt": "…"}]}` (1 to 12) |
+| gallery | `{"gallery": ["images/a.jpg", {"image": "images/b.jpg", "alt": "…", "caption": "…"}]}` (1 to 12) |
 | table | `{"table": {"head": ["A", "B"], "rows": [["1", "2"]]}}` |
 | divider | `{"rule": true}` |
 | raw HTML | `{"html": "<p>…</p>"}` (cleaned like everything else) |
