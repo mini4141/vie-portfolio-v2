@@ -56,7 +56,7 @@ cd devops && cp .env.example .env && docker compose up -d --build
 | `app/migrations` | numbered SQL migrations (never edit an applied one) |
 | `app/tests` | unit, HTTP and regression tests |
 | `devops` | Dockerfile, compose, Caddy, Litestream, runbook |
-| `docs` | `PRACTICES.md`, `BACKLOG.md`, `HANDOFF.md` |
+| `docs` | `PRACTICES.md`, `BACKLOG.md`, `HANDOFF.md`, `IMPORT.md` (add projects from JSON) |
 
 ## Known limits
 

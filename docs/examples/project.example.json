@@ -1,0 +1,33 @@
+{
+  "slug": "pocketwise",
+  "title": "Pocketwise",
+  "summary": "A budget tracker that helps young families see where their money goes, in one tap.",
+  "kind": "Budget tracker app",
+  "role": "Solo developer and designer",
+  "stack": "React Native, Expo, SQLite, Supabase",
+  "tags": ["Mobile app", "Open source"],
+  "live_url": "https://pocketwise.example.com",
+  "src_url": "https://github.com/example/pocketwise",
+  "started": "2026-01",
+  "finished": "2026-04",
+  "featured": true,
+  "status": "published",
+  "cover": "images/cover.jpg",
+  "cover_alt": "Two phones showing the Pocketwise budget and spending screens",
+  "story": [
+    { "h2": "The problem" },
+    { "p": "Most budgeting apps ask for **twenty minutes of setup** before showing anything useful, so people give up in the first week." },
+    { "quote": "Just tell me if we can afford dinner out this weekend." },
+    { "h2": "What I did" },
+    { "ul": ["**Learn, don't ask.** Categories are guessed from the first ten expenses.", "**Offline first.** Everything works on patchy data and syncs later.", "**One number.** The home screen shows only what is *left to spend* this week."] },
+    { "image": "images/sketch.jpg", "alt": "Early sketch of the one-tap setup", "caption": "Early sketch of the one-tap setup, before any code." },
+    { "h3": "Syncing without a signal" },
+    { "p": "Each expense is saved on the phone first, then sent to `Supabase` when the connection returns. The newest change wins." },
+    { "code": "await db.expenses.put(expense)\nqueue.push({ id: expense.id, updatedAt: Date.now() })\nif (navigator.onLine) sync.flush()", "lang": "ts" },
+    { "callout": "The sync engine is open source: [read the code on GitHub](https://github.com/example/pocketwise).", "kind": "tip" },
+    { "h2": "The result" },
+    { "stat": "40%", "text": "fewer people leave in the first week" },
+    { "table": { "head": ["Metric", "Before", "After"], "rows": [["Setup time", "20 min", "1 tap"], ["Week-1 retention", "31%", "58%"]] } },
+    { "gallery": [{ "image": "images/screen-1.jpg", "alt": "Weekly sessions chart" }, { "image": "images/screen-2.jpg", "alt": "Add-expense screen" }] }
+  ]
+}

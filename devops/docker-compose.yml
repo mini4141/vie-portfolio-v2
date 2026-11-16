@@ -15,6 +15,7 @@ services:
       OWNER_PASSWORD: ${OWNER_PASSWORD:-}
     volumes:
       - data:/data          # named volume: SQLite WAL is unreliable on Windows/Docker bind mounts
+      - ../import:/import:ro   # drop project.json and pictures here, then see docs/IMPORT.md (mkdir import first)
     expose:
       - "4321"
     security_opt:
