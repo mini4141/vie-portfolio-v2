@@ -14,10 +14,12 @@ test('landing page renders profile, featured projects, skills, experience, conta
   const h = await r.text();
   assert.match(h, /<title>Muhamad Alvie — Software Engineer<\/title>/);
   assert.match(h, /<h1[^>]*>Muhamad Alvie<\/h1>/);
-  for (const t of ['pocketwise/', 'laju/', 'kanal/', 'sehat/']) assert.ok(h.includes(t), t);
-  assert.ok(!h.includes('arsip/') || h.includes('see all 6'), 'only featured on the landing page');
-  assert.ok(h.includes('see all 6'));
-  assert.match(h, /"frontend"/);
+  for (const t of ['pocketwise', 'laju', 'kanal', 'sehat']) assert.ok(h.includes(`href="/projects/${t}"`), t);
+  assert.ok(!h.includes('href="/projects/arsip"'), 'only featured on the landing page');
+  assert.ok(h.includes('See all 6 projects'));
+  assert.match(h, /<dt>frontend<\/dt>/i);
+  for (const h2 of ['About', 'Selected projects', 'Skills', 'Experience', 'Contact']) assert.ok(h.includes(`>${h2}</h2>`), h2);
+  assert.doesNotMatch(h, /\$<\/span> (whoami|cat |ls |git log|mail )|skills\.json|about\.md|\(HEAD\)|class="hash"|## About/, 'no command-line labels for visitors to decode');
   assert.match(h, /Senior Software Engineer/);
   assert.match(h, /mailto:hello@vie\.dev/);
   assert.match(h, /href="\/media\/cv-muhamad-alvie\.pdf"/);
@@ -37,21 +39,25 @@ test('share metadata is present for LinkedIn / WhatsApp / X', async () => {
 
 test('all projects page lists only published projects with tag filters', async () => {
   const h = await text('/projects');
-  for (const t of ['pocketwise/', 'laju/', 'kanal/', 'sehat/', 'arsip/', 'mini-cms/']) assert.ok(h.includes(`<strong>${t}</strong>`), t);
+  for (const t of ['pocketwise', 'laju', 'kanal', 'sehat', 'arsip', 'mini-cms']) assert.ok(h.includes(`href="/projects/${t}"`), t);
+  assert.ok(h.includes('<strong>Pocketwise</strong>'), 'rows show the project title, not a folder name');
   assert.ok(!h.includes('sample-draft'), 'drafts must not leak');
-  for (const f of ['--backend', '--data', '--mobile-app', '--open-source', '--web-app']) assert.ok(h.includes(f), f);
+  for (const f of ['Backend', 'Data', 'Mobile app', 'Open source', 'Web app']) assert.ok(h.includes(`>${f}</button>`), f);
+  assert.ok(h.includes('>All</button>'));
+  assert.doesNotMatch(h, /drwx|ls -l|--all|--backend/, 'no permission strings or command flags');
   assert.match(h, /6 projects/);
 });
 
 test('project detail renders the rich story and links to the next project', async () => {
   const h = await text('/projects/pocketwise');
-  assert.match(h, /<h1[^>]*># Pocketwise<\/h1>/);
+  assert.match(h, /<h1[^>]*>Pocketwise<\/h1>/);
+  assert.doesNotMatch(h, /README\.md|cd \.\.\//);
   assert.match(h, /<div class="rt">/);
   for (const frag of ['<h2>The problem</h2>', 'class="stat"', 'class="callout"', 'class="rt-table"', 'class="shots"', '<pre class="code"']) assert.ok(h.includes(frag), frag);
-  assert.match(h, /kind<\/span>:  Budget tracker app/);
-  assert.match(h, /dates<\/span>: Jan — Apr 2026/);
+  assert.match(h, /<dt>Type<\/dt><dd>Budget tracker app<\/dd>/);
+  assert.match(h, /<dt>Dates<\/dt><dd>Jan — Apr 2026<\/dd>/);
   assert.match(h, /href="https:\/\/pocketwise\.app"/);
-  assert.match(h, /cd \.\.\/laju/);
+  assert.match(h, /href="\/projects\/laju"><span class="muted">Next project<\/span> <strong>Laju<\/strong>/);
 });
 
 test('drafts and unknown slugs are 404, even by guessing the slug', async () => {
@@ -84,7 +90,9 @@ test('robots.txt and sitemap.xml', async () => {
 test('404 page', async () => {
   const r = await s.req('/nothing-here');
   assert.equal(r.status, 404);
-  assert.match(await r.text(), /404 — not found/);
+  const h = await r.text();
+  assert.match(h, /Page not found/);
+  assert.doesNotMatch(h, /cd missing|404 — not found/);
 });
 
 test('public pages may be cached by a CDN; sign-in and the admin never are', async () => {

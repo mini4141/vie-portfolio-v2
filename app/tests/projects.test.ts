@@ -51,9 +51,9 @@ test('publish / unpublish controls public visibility, sitemap and landing', asyn
   const page = await pub('/projects/visible-thing');
   assert.equal(page.status, 200);
   assert.match(await page.text(), /Now you see me\./);
-  assert.match(await (await pub('/projects')).text(), /<strong>visible-thing\/<\/strong>/);
+  assert.match(await (await pub('/projects')).text(), /<a href="\/projects\/visible-thing">/);
   assert.match(await (await pub('/sitemap.xml')).text(), /visible-thing/);
-  assert.match(await (await pub('/')).text(), /visible-thing\//, 'featured + published shows on the landing page');
+  assert.match(await (await pub('/')).text(), /href="\/projects\/visible-thing"/, 'featured + published shows on the landing page');
   await own('PATCH', `/api/projects/${p.id}`, { status: 'draft' });
   assert.equal((await pub('/projects/visible-thing')).status, 404);
   assert.doesNotMatch(await (await pub('/projects')).text(), /visible-thing/);
@@ -100,7 +100,7 @@ test('reorder changes the public order; partial or bogus lists are refused', asy
   assert.equal((await own('POST', '/api/projects/reorder', { ids: 'x' })).status, 400);
   const reversed = [...ids].reverse();
   assert.equal((await own('POST', '/api/projects/reorder', { ids: reversed })).status, 200);
-  const slugs = [...(await (await pub('/projects')).text()).matchAll(/<strong>([\w-]+)\/<\/strong>/g)].map((m) => m[1]);
+  const slugs = [...(await (await pub('/projects')).text()).matchAll(/<a href="\/projects\/([\w-]+)">/g)].map((m) => m[1]);
   const expected = reversed.map((id) => list.find((p) => p.id === id)!).filter((p) => p.status === 'published').map((p) => p.slug);
   assert.deepEqual(slugs, expected);
 });

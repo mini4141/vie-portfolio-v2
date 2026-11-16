@@ -2,26 +2,18 @@
 import Icon from './Icon.astro';
 import type { Project } from '../lib/queries.ts';
 import { mediaUrl } from '../lib/queries.ts';
-import { dateRange, safeUrl, esc } from '../lib/text.ts';
+import { dateRange, safeUrl } from '../lib/text.ts';
 
 interface Props { project: Project; next?: Project | null }
 const { project: p, next = null } = Astro.props;
 const live = safeUrl(p.live_url), src = safeUrl(p.src_url);
-const front = [
-  '<span class="c">---</span>',
-  `<span class="k">kind</span>:  ${esc(p.kind)}`,
-  `<span class="k">role</span>:  ${esc(p.role)}`,
-  `<span class="k">stack</span>: [${esc(p.stack)}]`,
-  `<span class="k">dates</span>: ${esc(dateRange(p.started, p.finished))}`,
-  `<span class="k">tags</span>:  [${esc(p.tags.join(', '))}]`,
-  '<span class="c">---</span>',
-].join('\n');
+const facts = [['Type', p.kind], ['Role', p.role], ['Stack', p.stack], ['Dates', dateRange(p.started, p.finished)], ['Tags', p.tags.join(', ')]].filter(([, v]) => v.trim());
 ---
 <section class="sec first">
-  <p class="muted small reveal"><a href="/projects">projects</a> / {p.slug} / README.md</p>
-  <h1 class="reveal"># {p.title}</h1>
+  <p class="muted small reveal"><a href="/projects">Projects</a> / {p.title}</p>
+  <h1 class="reveal">{p.title}</h1>
   {p.summary && <p class="headline reveal">{p.summary}</p>}
-  <pre class="code front reveal"><code set:html={front} /></pre>
+  {facts.length > 0 && <dl class="kv facts reveal">{facts.map(([k, v]) => <div><dt>{k}</dt><dd>{v}</dd></div>)}</dl>}
   {(live || src) && (
     <div class="cta reveal">
       {live && <a class="btn btn-primary" href={live} rel="noopener">Open live version <Icon name="out" /></a>}
@@ -29,8 +21,8 @@ const front = [
     </div>
   )}
   {p.cover_file && (
-    <div class="reveal"><div class="win cover"><div class="win-bar"><i></i><i></i><i></i><span>{p.slug}/cover.jpg</span></div><img src={mediaUrl(p.cover_file)} alt={p.cover_alt} /></div></div>
+    <div class="reveal"><div class="win cover"><div class="win-bar"><i></i><i></i><i></i></div><img src={mediaUrl(p.cover_file)} alt={p.cover_alt} /></div></div>
   )}
   <div class="rt" set:html={p.story_html} />
-  {next && <a class="next reveal" href={`/projects/${next.slug}`}><span class="ps">$</span> cd ../{next.slug} <span class="muted">— next project: {next.title}</span> →</a>}
+  {next && <a class="next reveal" href={`/projects/${next.slug}`}><span class="muted">Next project</span> <strong>{next.title}</strong> →</a>}
 </section>

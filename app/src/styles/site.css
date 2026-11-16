@@ -268,9 +268,7 @@ h1,h2{font-family:var(--mono)}
 .code .k{color:var(--accent)}
 .code .s{color:var(--fg)}
 .code .c{color:var(--muted)}
-.log li{display:grid;grid-template-columns:5.5rem 8rem 1fr;gap:1rem;padding:1rem 0;border-bottom:1px dashed var(--line);font-size:.95rem}
-.hash{font-family:var(--mono);color:#b7791f}
-:root[data-theme=dark] .hash{color:#e7b45f}
+.log li{display:grid;grid-template-columns:9rem 1fr;gap:1rem;padding:1rem 0;border-bottom:1px dashed var(--line);font-size:.95rem}
 .yr{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
 .head{font-family:var(--mono);font-size:.78rem;color:var(--accent)}
 .log p{font-size:.9rem;margin-top:.2rem}
@@ -293,15 +291,19 @@ h1,h2{font-family:var(--mono)}
 .filters button{font-family:var(--mono);font-size:.82rem;border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-sm);padding:.35rem .7rem;cursor:pointer;color:var(--muted)}
 .filters button[aria-pressed=true]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 .ls{border-top:1px solid var(--line);margin-top:1rem}
-.ls a{display:grid;grid-template-columns:64px 6.5rem 3.5rem 1fr auto;gap:1rem;align-items:center;padding:.9rem .4rem;border-bottom:1px solid var(--line);text-decoration:none;font-size:.92rem}
+.ls a{display:grid;grid-template-columns:64px 3.5rem 1fr auto;gap:1rem;align-items:center;padding:.9rem .4rem;border-bottom:1px solid var(--line);text-decoration:none;font-size:.92rem}
 .ls a:hover{background:var(--surface)}
 .ls img{width:64px;aspect-ratio:4/3;object-fit:cover;border-radius:3px}
-.perm,.ls .yr{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.ls .yr{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
 .nm strong{font-family:var(--mono);color:var(--accent);display:block}
 .nm span{color:var(--muted);font-size:.88rem}
 .ls .tags{margin:0;justify-content:flex-end}
 
-.front{margin:1.6rem 0;font-size:.85rem}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:.9rem 1.6rem;margin:0;padding:1.4rem 1.6rem;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);font-size:.95rem}
+.kv>div{display:contents}
+.kv dt{font-family:var(--mono);font-size:.82rem;color:var(--muted);padding-top:.15rem}
+.kv dd{margin:0;line-height:1.6}
+.facts{margin:1.6rem 0;font-size:.92rem}
 .cover{margin:2rem 0 1rem}
 .cover img{aspect-ratio:2/1}
 blockquote{margin:0;border-left:3px solid var(--accent);padding:.6rem 1.2rem;font-size:1.1rem;background:var(--accent-soft);border-radius:0 var(--radius) var(--radius) 0}
@@ -325,12 +327,13 @@ blockquote strong{display:block;font-family:var(--mono);font-size:clamp(2.5rem,6
   /* four links no longer fit beside the prompt: give the menu its own row */
   .top{flex-wrap:wrap;row-gap:.6rem}
   .top nav{width:100%;justify-content:space-between}
+  .kv{grid-template-columns:1fr;gap:.15rem}.kv dt{padding-top:.7rem}.kv>div:first-child dt{padding-top:0}
 }
 @media (max-width:800px){
   .top nav{gap:.8rem}.prompt .p{display:none}
   .hero,.cards,.contact{grid-template-columns:1fr}
-  .log li{grid-template-columns:5rem 1fr}.log .yr{grid-column:2}.log li>div{grid-column:1/-1}
-  .ls a{grid-template-columns:56px 1fr}.ls img{width:56px}.perm,.ls .yr,.ls .tags{display:none}
+  .log li{grid-template-columns:1fr;gap:.2rem}
+  .ls a{grid-template-columns:56px 1fr}.ls img{width:56px}.ls .yr,.ls .tags{display:none}
   .shots{grid-template-columns:1fr}
 }
 .card-p>a{text-decoration:none;display:block}
@@ -345,8 +348,8 @@ blockquote strong{display:block;font-family:var(--mono);font-size:clamp(2.5rem,6
 .rt>figure+*,.rt>.shots+*,.rt>pre+*,.rt>.rt-table+*,.rt>.callout+*,.rt>blockquote+*{margin-top:1.8rem}
 .rt h2{font-family:var(--mono);font-size:1.25rem;font-weight:600;line-height:1.3;margin:3rem 0 0}
 .rt h3{font-family:var(--mono);font-size:1.02rem;font-weight:600;line-height:1.35;margin-top:2.2rem}
-.rt h2::before{content:"## ";color:var(--muted);font-weight:400}
-.rt h3::before{content:"### ";color:var(--muted);font-weight:400}
+.rt-edit h2::before{content:"## ";color:var(--muted);font-weight:400}
+.rt-edit h3::before{content:"### ";color:var(--muted);font-weight:400}
 .rt h2+*,.rt h3+*{margin-top:.8rem}
 .rt>:first-child{margin-top:0}
 .rt p,.rt ul,.rt ol,.rt blockquote:not(.stat),.rt .callout{max-width:62ch}

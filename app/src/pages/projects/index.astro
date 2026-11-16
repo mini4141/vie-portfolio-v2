@@ -10,20 +10,19 @@ const year = (p: { finished: string; started: string }) => (p.finished || p.star
 <Base title="All projects" description="Everything I have built, filterable by tag." prompt="~/projects" nav="work">
   <main id="main" class="col">
     <section class="sec first">
-      <p class="cmd reveal"><span class="ps">$</span> ls -l projects/</p>
       <h1 class="reveal">All projects</h1>
       <div class="filters reveal" data-filter-group="#list" role="group" aria-label="Filter by tag">
-        <button data-filter="all" aria-pressed="true">--all</button>
-        {tags.map((t) => <button data-filter={t} aria-pressed="false">--{slugify(t)}</button>)}
+        <button data-filter="all" aria-pressed="true">All</button>
+        {tags.map((t) => <button data-filter={t} aria-pressed="false">{t}</button>)}
       </div>
-      <p class="muted small">total <span data-filter-count aria-live="polite">{projects.length} {projects.length === 1 ? 'project' : 'projects'}</span></p>
+      <p class="muted small"><span data-filter-count aria-live="polite">{projects.length} {projects.length === 1 ? 'project' : 'projects'}</span></p>
       <ul class="ls" id="list">
         {projects.map((p) => (
           <li class="reveal" data-tags={p.tags.join('|')}>
             <a href={`/projects/${p.slug}`}>
               {p.cover_file ? <img src={mediaUrl(p.cover_file)} alt="" loading="lazy" /> : <span></span>}
-              <span class="perm">drwxr-xr-x</span><span class="yr">{year(p)}</span>
-              <span class="nm"><strong>{p.slug}/</strong><span>{p.summary}</span></span>
+              <span class="yr">{year(p)}</span>
+              <span class="nm"><strong>{p.title}</strong><span>{p.summary}</span></span>
               <span class="tags">{p.tags.map((t) => <span>#{slugify(t)}</span>)}</span>
             </a>
           </li>
