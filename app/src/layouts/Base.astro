@@ -37,16 +37,17 @@ const accent = /^#[0-9a-f]{6}$/i.test(s.accent) ? s.accent : '#12805C';
 <body class="pub">
   <a class="skip" href="#main">Skip to content</a>
   <header class="top">
-    <a class="prompt" href="/"><span class="u">vie@jakarta</span>:<span class="p">{prompt}</span>$<span class="caret" aria-hidden="true"></span></a>
+    <a class="prompt" href="/"><span class="u">vie@bandung</span>:<span class="p">{prompt}</span>$<span class="caret" aria-hidden="true"></span></a>
     <nav aria-label="Main">
       <a href="/#about">about</a>
       <a href="/projects" aria-current={nav === 'work' ? 'page' : undefined}>work</a>
       <a href="/#contact">contact</a>
+      <a href="/admin/signin">login</a>
       <button class="theme-btn" type="button" data-theme-toggle aria-label="Switch colour mode"><Icon class="i-moon" name="moon" /><Icon class="i-sun" name="sun" /></button>
     </nav>
   </header>
   <slot />
-  <footer class="foot"><span># © {new Date().getFullYear()} {p.name}</span><a href="/admin/signin">Try the editor →</a></footer>
+  <footer class="foot"><span># © {new Date().getFullYear()} {p.name}</span></footer>
   <script is:inline src="/site.js" defer></script>
 </body>
 </html>

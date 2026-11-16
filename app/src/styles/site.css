@@ -321,6 +321,11 @@ blockquote strong{display:block;font-family:var(--mono);font-size:clamp(2.5rem,6
 .ed-page .ed-banner{font-family:var(--mono);font-size:.8rem}
 .signin-form h1{font-weight:600;font-size:1.8rem}
 
+@media (max-width:480px){
+  /* four links no longer fit beside the prompt: give the menu its own row */
+  .top{flex-wrap:wrap;row-gap:.6rem}
+  .top nav{width:100%;justify-content:space-between}
+}
 @media (max-width:800px){
   .top nav{gap:.8rem}.prompt .p{display:none}
   .hero,.cards,.contact{grid-template-columns:1fr}

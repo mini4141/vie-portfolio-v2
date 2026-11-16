@@ -21,7 +21,9 @@ test('landing page renders profile, featured projects, skills, experience, conta
   assert.match(h, /Senior Software Engineer/);
   assert.match(h, /mailto:hello@vie\.dev/);
   assert.match(h, /href="\/media\/cv-muhamad-alvie\.pdf"/);
-  assert.match(h, /<a href="\/admin\/signin">Try the editor/);
+  assert.match(h, /<a href="\/admin\/signin">login<\/a>/);
+  assert.match(h, /vie@bandung/);
+  assert.doesNotMatch(h, /Try the editor|vie@jakarta/);
 });
 
 test('share metadata is present for LinkedIn / WhatsApp / X', async () => {
