@@ -1,0 +1,23 @@
+@startuml
+!include skin.iuml
+actor "Worker\n(400-500 people)" as W
+node "Fingerprint reader" as FR
+node "On-prem server\nat the facility (single host, Linux)" as SRV {
+  component "Spring Boot API\nSpring Security, REST, validation" as API
+  component "DigitalPersona SDK\n(device attached to server)" as SDK
+  database "PostgreSQL\n15-20 tables" as DB
+  component "React dashboard +\nC# WebForms QR inventory" as UI
+}
+actor "Managers" as M
+W --> FR : scan
+FR --> SDK
+SDK --> API : attendance event
+API --> DB : Spring Data JPA\n+ raw SQL for reports
+UI --> API : REST
+W --> UI : scan QR on item\n(production inventory)
+API --> M : daily report\nhours worked per person
+note bottom of SRV
+Monitoring: watch application performance on the server,
+investigate spikes. Backups were manual.
+end note
+@enduml

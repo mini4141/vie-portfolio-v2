@@ -1,0 +1,22 @@
+@startuml
+!include skin.iuml
+participant "App (SQLite WAL)" as A
+participant Litestream as L
+participant "rclone\n(cron 03:15 WIB)" as R
+participant "Cloudflare R2\nbucket vie-portfolio-backup" as B
+participant "You (restore)" as Y
+== Continuous ==
+A -> L : every write lands in the WAL
+L -> B : ship WAL segments (seconds)
+L -> B : snapshot, keep 168 h (7 days)
+== Nightly ==
+R -> B : copy new files in /data/uploads\n(never deletes remotely)
+== Restore on a fresh VPS ==
+Y -> B : litestream restore -> /data/app.db
+Y -> B : rclone copy back -> /data/uploads
+Y -> A : docker compose up -d
+note right of Y
+Restore was rehearsed on a throw-away volume:
+row counts and a public page matched.
+end note
+@enduml

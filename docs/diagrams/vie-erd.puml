@@ -1,0 +1,64 @@
+@startuml
+!include skin.iuml
+hide circle
+skinparam linetype ortho
+entity users {
+  * id : integer <<PK>>
+  --
+  * email : text <<unique>>
+  * password_hash : text
+  * created_at : integer
+}
+entity sessions {
+  * id : text <<PK>>
+  --
+  * role : owner | guest
+  user_id : integer <<FK>>
+  * expires_at : integer
+}
+entity login_attempts {
+  * key : text <<PK>> (per client IP)
+  --
+  * fails : integer
+  * locked_until : integer
+}
+entity media {
+  * id : integer <<PK>>
+  --
+  * filename : text <<unique, content hash>>
+  * mime, bytes, width, height
+  alt : text
+}
+entity projects {
+  * id : integer <<PK>>
+  --
+  * slug : text <<unique>>
+  * title, summary
+  story_html : sanitised HTML
+  cover_media_id : integer <<FK>>
+  kind, role, stack, tags (JSON)
+  live_url, src_url, started, finished
+  * status : draft | published
+  featured, is_sample, position
+  published_at
+}
+entity profile {
+  * id = 1 <<single row>>
+  --
+  name, headline, about, location, email
+  skills, experience, links (JSON)
+  photo_media_id <<FK>>
+  cv_media_id <<FK>>
+}
+entity settings {
+  * id = 1 <<single row>>
+  --
+  site_title, description, accent
+  default_theme, guest_enabled
+  share_media_id <<FK>>
+}
+users ||--o{ sessions
+media |o--o{ projects : cover
+media |o--o| profile : photo, CV
+media |o--o| settings : share image
+@enduml

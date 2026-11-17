@@ -1,0 +1,20 @@
+@startuml
+!include skin.iuml
+rectangle "React UI" as UI
+rectangle "C# backend (.NET)\nREST API + SignalR hub" as BE
+database "SQLite\nprotocols, run history, users" as DB
+rectangle "C++ firmware library\n(DLL)" as FW
+rectangle "Motors" as MO
+rectangle "Camera" as CAM
+rectangle "Python control scripts\n(electronics team)" as PY
+rectangle "Jenkins (on-prem office server)\nbuild + deploy" as CI
+UI --> BE : REST commands
+BE --> UI : SignalR live status
+BE --> DB
+BE --> FW : P/Invoke
+FW --> MO
+FW --> CAM
+PY --> FW : same DLL
+PY ..> BE : logic re-implemented in C#
+CI ..> BE
+@enduml

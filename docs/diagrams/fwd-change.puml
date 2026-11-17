@@ -1,0 +1,13 @@
+@startuml
+!include skin.iuml
+start
+:Change request (CR) from business analyst;
+:Refine technical spec with BA;
+:Write impact analysis\ncode touched, DB changes,\ndocuments affected, products;
+:Implement + merge to branch;
+:SIT: common success flows;
+:Support UAT;
+:Deployment ticket to DevOps\n(Jenkins to EC2);
+:Check logs in CloudWatch;
+stop
+@enduml

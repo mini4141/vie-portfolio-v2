@@ -1,0 +1,24 @@
+@startuml
+!include skin.iuml
+start
+:Edit code on a branch;
+:git push;
+partition "GitHub Actions: CI" {
+  :Ubuntu runner, Node 24;
+  :npm ci + astro build;
+  :node --test (123 tests:\nauth, projects, guests, import,\nmedia, hardening, devops);
+  :Build Docker image;
+  :Smoke test the container\n/healthz = ok, / returns HTML,\nruns as non-root;
+}
+if (all green?) then (yes)
+  :SSH to VPS: git pull;
+  :docker compose up -d --build\n(healthcheck gates the switch);
+  :Purge changed URLs in Cloudflare;
+  :Run "Warm CDN cache" workflow;
+  :UptimeRobot watches /healthz;
+else (no)
+  :Fix and push again;
+  stop
+endif
+stop
+@enduml

@@ -1,0 +1,18 @@
+@startuml
+!include skin.iuml
+actor Customer
+rectangle "Customer portal" as P
+rectangle "Core payment service" as PAY
+rectangle "Document generation service" as DOC
+rectangle "Communication service\n(email + SMS)" as COM
+queue "Kafka" as K
+database "MySQL" as DB
+cloud "AWS (EC2, load balancer,\nCloudWatch, Secrets Manager)" as AWS
+Customer --> P
+P --> PAY : REST
+PAY --> DB
+PAY --> K : payment events
+K --> DOC : generate policy docs
+K --> COM : notify customer
+DOC --> K : document ready
+@enduml

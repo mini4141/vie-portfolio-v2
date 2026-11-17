@@ -1,0 +1,20 @@
+@startuml
+!include skin.iuml
+actor Guest
+participant "React +\nSitecore JSS" as FE
+participant ".NET Framework\nC# API" as API
+participant "Payment gateway\n(third party, via API)" as PG
+participant "Support\n(L3 engineers)" as S
+Guest -> FE : choose attraction / hotel /\nrestaurant / event
+FE -> API : price, availability, create booking
+API -> PG : charge
+alt success
+  PG --> API : paid
+  API --> FE : confirmation
+else temporary failure
+  API -> PG : automatic retry
+else critical failure
+  API -> S : ticket raised for an engineer
+  S -> API : investigate logs, fix or reconcile
+end
+@enduml

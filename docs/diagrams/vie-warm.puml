@@ -1,0 +1,26 @@
+@startuml
+!include skin.iuml
+participant "GitHub Actions\n(daily or manual)" as G
+participant "warm-cache.mjs" as W
+participant "Globalping API" as P
+participant "Probes in\nUS / EU / Asia / ..." as PR
+participant "Cloudflare edge\nin each region" as E
+G -> W : run with GLOBALPING_TOKEN
+W -> W : read /sitemap.xml\nbuild URL list
+W -> W : budget = 80% of hourly allowance\n(500/h with a token)
+loop each URL x location batch
+  W -> P : POST measurement (HTTP GET)
+  P -> PR : run from real networks
+  PR -> E : GET page
+  E --> PR : MISS first time, now cached
+  PR --> P : status + cf-cache-status
+  P --> W : result
+end
+W -> W : stop politely on HTTP 429
+W --> G : summary: HIT / MISS counts per region
+note right of W
+New project? It appears in the sitemap,
+so the next run warms it. After an
+import, purge then run the workflow.
+end note
+@enduml

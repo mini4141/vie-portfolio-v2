@@ -1,0 +1,19 @@
+@startuml
+!include skin.iuml
+rectangle "Jira ticket\n(bug or feature)" as J
+rectangle "Code change\n(.NET C# / React)" as C
+rectangle "Azure DevOps\npipeline: build + test" as P
+rectangle "Azure DevOps\nrelease" as R
+rectangle "Azure-hosted\ne-commerce site" as S
+rectangle "Azure metrics + logs" as M
+J -> C
+C -> P
+P -> R
+R -> S
+S -> M : slow-response alerts
+M ..> J : new L3 ticket
+note bottom of M
+Example: slow responses traced to full log storage.
+Fix: archive old logs, response times recovered.
+end note
+@enduml

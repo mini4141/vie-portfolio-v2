@@ -1,0 +1,38 @@
+@startuml
+!include skin.iuml
+actor "Recruiter\n(anywhere)" as V
+cloud "Cloudflare" as CF {
+  rectangle "DNS + proxy\nSSL Full (strict)" as DNS
+  rectangle "Edge cache\n+ Smart Tiered Cache" as EC
+}
+node "Biznet NEO Lite VPS (Bandung)\nUbuntu 26.04 LTS, 1 host" as VPS {
+  rectangle "ufw firewall\n80/443 only from Cloudflare IPs" as FW
+  rectangle "Caddy\nHTTPS, gzip/zstd, security headers" as CADDY
+  rectangle "Astro SSR app (Node 24)\npublic pages, admin, JSON API" as APP
+  database "SQLite (WAL)\napp.db" as DB
+  database "Uploads volume\nWebP, hashed names" as UP
+  rectangle "Litestream" as LS
+  rectangle "rclone (nightly cron)" as RC
+}
+cloud "Cloudflare R2" as R2 {
+  database "vie/app.db\n(7 days of snapshots)" as R2DB
+  database "vie/uploads" as R2UP
+}
+rectangle "GitHub Actions\nCI + daily cache warm-up" as GH
+rectangle "Globalping probes\n(many countries)" as GP
+rectangle "UptimeRobot\n/healthz every 5 min" as UR
+V --> DNS : https://alvieirvansyah.com
+DNS --> EC
+EC --> FW : cache miss only
+FW --> CADDY
+CADDY --> APP : reverse proxy
+APP --> DB
+APP --> UP
+DB ..> LS : WAL stream
+LS --> R2DB
+UP ..> RC
+RC --> R2UP
+GH --> GP : plan + request
+GP --> EC : warm each region
+UR --> DNS
+@enduml
